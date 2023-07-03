@@ -1,2 +1,2 @@
 # osu-python-test-api-call-manager
-API testing with Python Script
+OSU API Testing Manager with Python Script
