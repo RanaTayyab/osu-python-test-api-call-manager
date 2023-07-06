@@ -73,10 +73,11 @@ def get_url(choice):
 
 
 if __name__ == "__main__":
+    config = load_config()
+    accessToken = get_access_token()
+    contentType = config["accessToken"]["headers"]["Content-Type"]
 
-    access_token = get_access_token()
-
-    header={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8" , "Authorization":access_token}
+    header={"Content-Type": contentType , "Authorization":accessToken}
 
 
     while True:
@@ -86,13 +87,13 @@ if __name__ == "__main__":
 
         show_tasks()
 
-        user_choice = get_user_choice()
+        userChoice = get_user_choice()
 
-        api_url = get_url(user_choice)
+        api_url = get_url(userChoice)
 
-        if user_choice == "3":
+        if userChoice == "3":
             break
-        if user_choice == "1" or user_choice == "2":
+        if userChoice == "1" or userChoice == "2":
             api_call =  get_api_data(api_url, parameters, header)
 
             
