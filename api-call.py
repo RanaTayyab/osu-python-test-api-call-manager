@@ -72,8 +72,7 @@ def show_tasks():
 
 def get_user_choice():
     config = load_from_config()
-    choice = input(config["generalStrings"]["enterChoice"])
-    return choice
+    return input(config["generalStrings"]["enterChoice"])
 
 
 def get_url(choice):

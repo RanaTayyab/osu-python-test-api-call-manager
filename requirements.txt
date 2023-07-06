@@ -1,7 +1,10 @@
+astor==0.8.1
 attrs==23.1.0
 bandit==1.7.5
 certifi==2023.5.7
 charset-normalizer==3.1.0
+click==8.1.4
+dlint==0.14.1
 eradicate==2.3.0
 flake8==6.0.0
 flake8-bandit==4.1.1
@@ -9,10 +12,14 @@ flake8-bugbear==23.6.5
 flake8-builtins==2.1.0
 flake8-comprehensions==3.13.0
 flake8-eradicate==1.5.0
+flake8-functions==0.0.8
 flake8-functions-names==0.4.0
+flake8-pie==0.16.0
 flake8-print==5.0.0
+flake8-secure-coding-standard==1.4.0
 flake8-variables-names==0.0.6
 flake8_implicit_str_concat==0.4.0
+flake8_simplify==0.20.0
 gitdb==4.0.10
 GitPython==3.1.31
 idna==3.4
@@ -20,6 +27,7 @@ isort==5.12.0
 markdown-it-py==3.0.0
 mccabe==0.7.0
 mdurl==0.1.2
+mr-proper==0.0.7
 pbr==5.11.1
 pep8-naming==0.13.3
 pycodestyle==2.10.0
@@ -30,5 +38,7 @@ PyYAML==6.0
 requests==2.31.0
 rich==13.4.2
 smmap==5.0.0
+stdlib-list==0.9.0
 stevedore==5.1.0
+typing_extensions==4.7.1
 urllib3==2.0.3
