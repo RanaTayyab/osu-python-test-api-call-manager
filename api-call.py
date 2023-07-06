@@ -1,33 +1,41 @@
 import requests
 import json
+import yaml
 
 
+
+def load_config():
+    with open("configuration.yaml", "r") as file:
+        return yaml.safe_load(file)
 
 
 def get_access_token():
-    url = "https://api.oregonstate.edu/oauth2/token"
-    payload = {
-        "grant_type": "client_credentials",
-        "client_id": "8HAveOfxhbEQBDD5sA0VCEKVs8AHBv6z",
-        "client_secret": "tcGxL8lztWYQYjbm"
-    }
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
-    }
+    # Load configurations from the YAML file
+    config = load_config()
+    url = config["accessToken"]["url"]
+    enhancer = config["accessToken"]["enhancer"]
+    payload = config["accessToken"]["payload"]
+    headers = config["accessToken"]["headers"]
+    http_failed = config["httpResponses"]["failed"]
 
     response = requests.post(url, data=payload, headers=headers)
 
     if response.status_code == 200:
         # Request was successful
         access_token = response.json()["access_token"]
+        if access_token:
+            access_token = enhancer + access_token
         return access_token
     else:
-        print("Request failed with status code:", response.status_code)
+        print(http_failed, response.status_code)
+
 
 def get_api_data(url, parameters, header):
+    config = load_config()
+    http_success = config["httpResponses"]["success"]
     response = requests.get(f"{url}", params=parameters, headers=header)
     if response.status_code == 200:
-        print("sucessfully fetched the data with parameters")
+        print(http_success)
         format_result(response.json())
     else:
         print(
@@ -39,34 +47,34 @@ def format_result(data):
 
 
 def show_tasks():
-    print("Which API data you want to check \n")
-    print("1. Beavers Bus")
-    print("2. Terms")
-    print("3. Quit")
+    config = load_config()
+    # Get the API options from the config
+    apiOptions = config["apiOptions"]
+    print(config["generalStrings"]["whichApi"])
+    for i, option in enumerate(apiOptions, start=1):
+        print(f"{i}. {option}")
 
 def get_user_choice():
-    choice = input("Enter your choice (1 or 2 or 3): ")
+    config = load_config()
+    choice = input(config["generalStrings"]["enterChoice"])
     return choice
 
 def get_url(choice):
+    config = load_config()
     if choice == "1":
-        url = "https://api.oregonstate.edu/v1/beaverbus/routes"
-        return url
+        return config["apiUrls"]["beaverBus"]
     elif choice == "2":
-        url = "https://api.oregonstate.edu/v1/terms"
-        return url
+        return config["apiUrls"]["terms"]
     elif choice == "3":
-            print("Exisiting...")
+            print(config["generalStrings"]["exiting"])
     else:
-        print("Invalid choice. Please try again.")
+        print(config["generalStrings"]["invalidChoice"])
 
 
 
 if __name__ == "__main__":
 
     access_token = get_access_token()
-
-    access_token = "Bearer " + access_token
 
     header={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8" , "Authorization":access_token}
 
@@ -84,7 +92,7 @@ if __name__ == "__main__":
 
         if user_choice == "3":
             break
-
-        api_call =  get_api_data(api_url, parameters, header)
+        if user_choice == "1" or user_choice == "2":
+            api_call =  get_api_data(api_url, parameters, header)
 
             
