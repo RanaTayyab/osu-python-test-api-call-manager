@@ -1,8 +1,9 @@
-import requests
-import json
-import yaml
 import datetime
+import json
+
 import pytz
+import requests
+import yaml
 
 
 def load_from_config():
