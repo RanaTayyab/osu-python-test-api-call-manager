@@ -43,13 +43,16 @@ def get_access_token():
 
 
 def get_api_data(url, parameters, header):
-    config = load_config()
-    http_success = config["httpResponses"]["success"]
-    response = requests.get(f"{url}", params=parameters, headers=header, timeout=10)
+    response = requests.get(f"{url}",
+                            params=parameters,
+                            headers=header,
+                            timeout=10)
     if response.status_code == 200:
         format_result(response.json())
     else:
-        generated_error = 'There is a ' + str(response.status_code) + ' error with this request'
+        generated_error = 'There is a '
+        + str(response.status_code)
+        + ' error with this request'
         log_error(generated_error)
 
 
@@ -61,9 +64,9 @@ def format_result(data):
 def show_tasks():
     config = load_config()
     # Get the API options from the config
-    apiOptions = config["apiOptions"]
+    api_options = config["apiOptions"]
     print(config["generalStrings"]["whichApi"])
-    for i, option in enumerate(apiOptions, start=1):
+    for i, option in enumerate(api_options, start=1):
         print(f"{i}. {option}")
 
 
@@ -87,17 +90,17 @@ def get_url(choice):
 
 if __name__ == "__main__":
     config = load_config()
-    accessToken = get_access_token()
-    contentType = config["accessToken"]["headers"]["Content-Type"]
-    header = {"Content-Type": contentType, "Authorization": accessToken}
+    access_token = get_access_token()
+    content_type = config["accessToken"]["headers"]["Content-Type"]
+    header = {"Content-Type": content_type, "Authorization": access_token}
 
     while True:
         parameters = {
         }
         show_tasks()
-        userChoice = get_user_choice()
-        api_url = get_url(userChoice)
-        if userChoice == "3":
+        user_choice = get_user_choice()
+        api_url = get_url(user_choice)
+        if user_choice == "3":
             break
-        if userChoice == "1" or userChoice == "2":
+        if user_choice == "1" or user_choice == "2":
             api_call = get_api_data(api_url, parameters, header)
