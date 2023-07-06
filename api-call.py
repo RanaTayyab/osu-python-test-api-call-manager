@@ -7,11 +7,22 @@ import yaml
 
 
 def load_from_config():
+    """Loading important parameters from configuration file
+
+    :returns: The config object
+    """
+
     with open("configuration.yaml", "r") as file:
         return yaml.safe_load(file)
 
 
 def log_error(error_message):
+    """Logging any error messages in the file and appending
+    with date time information in PST
+
+    :param error_message: The error message to log in file comes as a string
+    """
+
     # Get the current datetime in PST
     pst_timezone = pytz.timezone('America/Los_Angeles')
     current_time = datetime.datetime.now(pst_timezone)
@@ -23,6 +34,11 @@ def log_error(error_message):
 
 
 def get_access_token():
+    """Get access token from OAuth2 for connecting with OSU public APIs
+
+    :returns: The access token string
+    """
+
     # Load configurations from the YAML file
     config = load_from_config()
     url = config["accessToken"]["url"]
@@ -31,7 +47,10 @@ def get_access_token():
     headers = config["accessToken"]["headers"]
     http_failed = config["httpResponses"]["failed"]
 
-    response = requests.post(url, data=payload, headers=headers, timeout=10)
+    response = requests.post(url,
+                             data=payload,
+                             headers=headers,
+                             timeout=10)
 
     if response.status_code == 200:
         # Request was successful
@@ -44,6 +63,13 @@ def get_access_token():
 
 
 def get_api_data(url, parameters, header):
+    """Get Request for getting the data from API
+
+    :param url: URL of the API
+    :param parameters: The parameters for API
+    :param header: The headers for API with authorization
+    """
+
     response = requests.get(f"{url}",
                             params=parameters,
                             headers=header,
@@ -58,11 +84,19 @@ def get_api_data(url, parameters, header):
 
 
 def format_result(data):
+    """Prints data in a specified format
+
+    :param data: data fetched from API
+    """
+
     text = json.dumps(data, sort_keys=True, indent=4)
     print(text)
 
 
 def show_tasks():
+    """Show tasks to choose as a Menu
+    """
+
     config = load_from_config()
     # Get the API options from the config
     api_options = config["apiOptions"]
@@ -72,11 +106,22 @@ def show_tasks():
 
 
 def get_user_choice():
+    """Get user input from menu
+
+    :returns: The user choice
+    """
+
     config = load_from_config()
     return input(config["generalStrings"]["enterChoice"])
 
 
 def get_url(choice):
+    """Get URL for API
+
+    :param choice: user choice input
+    :returns: URL of the API after user choice
+    """
+
     config = load_from_config()
     if choice == "1":
         return config["apiUrls"]["beaverBus"]
@@ -89,6 +134,9 @@ def get_url(choice):
 
 
 if __name__ == "__main__":
+    """Driver function
+    """
+
     config = load_from_config()
     access_token = get_access_token()
     content_type = config["accessToken"]["headers"]["Content-Type"]
@@ -102,5 +150,8 @@ if __name__ == "__main__":
         api_url = get_url(user_choice)
         if user_choice == "3":
             break
-        if user_choice == "1" or user_choice == "2":
+        if (
+            user_choice == "1"
+            or user_choice == "2"
+        ):
             api_call = get_api_data(api_url, parameters, header)
