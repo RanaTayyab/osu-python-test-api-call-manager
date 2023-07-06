@@ -5,7 +5,7 @@ import datetime
 import pytz
 
 
-def load_config():
+def load_from_config():
     with open("configuration.yaml", "r") as file:
         return yaml.safe_load(file)
 
@@ -23,7 +23,7 @@ def log_error(error_message):
 
 def get_access_token():
     # Load configurations from the YAML file
-    config = load_config()
+    config = load_from_config()
     url = config["accessToken"]["url"]
     enhancer = config["accessToken"]["enhancer"]
     payload = config["accessToken"]["payload"]
@@ -62,7 +62,7 @@ def format_result(data):
 
 
 def show_tasks():
-    config = load_config()
+    config = load_from_config()
     # Get the API options from the config
     api_options = config["apiOptions"]
     print(config["generalStrings"]["whichApi"])
@@ -71,13 +71,13 @@ def show_tasks():
 
 
 def get_user_choice():
-    config = load_config()
+    config = load_from_config()
     choice = input(config["generalStrings"]["enterChoice"])
     return choice
 
 
 def get_url(choice):
-    config = load_config()
+    config = load_from_config()
     if choice == "1":
         return config["apiUrls"]["beaverBus"]
     elif choice == "2":
@@ -89,7 +89,7 @@ def get_url(choice):
 
 
 if __name__ == "__main__":
-    config = load_config()
+    config = load_from_config()
     access_token = get_access_token()
     content_type = config["accessToken"]["headers"]["Content-Type"]
     header = {"Content-Type": content_type, "Authorization": access_token}
