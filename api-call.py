@@ -76,11 +76,13 @@ def get_api_data(url, parameters, header):
                             timeout=10)
     if response.status_code == 200:
         format_result(response.json())
+        return response.json()
     else:
+        print(response.status_code)
         generated_error = 'There is a '
         + str(response.status_code)
         + ' error with this request'
-        log_error(generated_error)
+        log_error(generated_error) 
 
 
 def format_result(data):
@@ -89,7 +91,7 @@ def format_result(data):
     :param data: data fetched from API
     """
 
-    text = json.dumps(data, sort_keys=True, indent=4)
+    text = json.dumps(data, indent=4)
     print(text)
 
 
@@ -101,7 +103,7 @@ def show_tasks():
     # Get the API options from the config
     api_options = config['apiOptions']
     print(config['generalStrings']['whichApi'])
-    for i, option in enumerate(api_options, start=1):
+    for i, option in enumerate(api_options, start=0):
         print(f"{i}. {option}")
 
 
@@ -123,35 +125,67 @@ def get_url(choice):
     """
 
     config = load_from_config()
-    if choice == '1':
-        return config['apiUrls']['beaverBus']
+    access_token = get_access_token()
+    content_type = config['accessToken']['headers']['Content-Type']
+    header = {'Content-Type': content_type, 'Authorization': access_token}
+
+
+    if choice == '0':
+        url_obj = {'url': config['generalStrings']['exiting'], 'parameters': {}, 'header': header}
+        return url_obj
+    elif choice == '1':
+        url_obj = {'url': config['apiUrls']['beaverBus'], 'parameters': {}, 'header': header}
+        return url_obj
     elif choice == '2':
-        return config['apiUrls']['terms']
+        url_obj = {'url': config['apiUrls']['terms'], 'parameters': {}, 'header': header}
+        return url_obj
     elif choice == '3':
-        print(config['generalStrings']['exiting'])
+        user_date = input('Enter Date (yyyy-mm-dd): ')
+        url_obj = {'url _terms': config['apiUrls']['terms'], 'url _textbooks': config['apiUrls']['textbooks'], 'parameters': {'date': user_date}, 'header': header}
+        return url_obj
     else:
         print(config['generalStrings']['invalidChoice'])
+
+
+def get_text_books_with_date(url_obj):
+   
+    terms_data_response = get_api_data(url_obj['url _terms'], url_obj['parameters'], url_obj['header'])
+
+    print(terms_data_response['data'][0]['attributes']['season'])
+    print(terms_data_response['data'][0]['attributes']['calendarYear'])
+
+    academicYear = terms_data_response['data'][0]['attributes']['calendarYear']
+    term = terms_data_response['data'][0]['attributes']['season']
+
+    url_obj['textbooks_parameters'] = {'academicYear': academicYear, 'term': term, 'subject': 'CS', 'courseNumber': '161'}
+
+    print(url_obj)
+
+    textbooks_data_response = get_api_data(url_obj['url _textbooks'], url_obj['textbooks_parameters'], url_obj['header'])
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
     """Driver function
     """
 
-    config = load_from_config()
-    access_token = get_access_token()
-    content_type = config['accessToken']['headers']['Content-Type']
-    header = {'Content-Type': content_type, 'Authorization': access_token}
-
     while True:
-        parameters = {
-        }
         show_tasks()
         user_choice = get_user_choice()
-        api_url = get_url(user_choice)
-        if user_choice == '3':
+        url_obj = get_url(user_choice)
+        if user_choice == '0':
+            print(url_obj['url'])
             break
         if (
             user_choice == '1'
             or user_choice == '2'
         ):
-            api_call = get_api_data(api_url, parameters, header)
+            api_call = get_api_data(url_obj['url'], url_obj['parameters'], url_obj['header'])
+        elif user_choice == '3':
+            api_call = get_text_books_with_date(url_obj)
