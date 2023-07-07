@@ -150,25 +150,10 @@ def get_url(choice):
 def get_text_books_with_date(url_obj):
    
     terms_data_response = get_api_data(url_obj['url _terms'], url_obj['parameters'], url_obj['header'])
-
-    print(terms_data_response['data'][0]['attributes']['season'])
-    print(terms_data_response['data'][0]['attributes']['calendarYear'])
-
     academicYear = terms_data_response['data'][0]['attributes']['calendarYear']
     term = terms_data_response['data'][0]['attributes']['season']
-
     url_obj['textbooks_parameters'] = {'academicYear': academicYear, 'term': term, 'subject': 'CS', 'courseNumber': '161'}
-
-    print(url_obj)
-
-    textbooks_data_response = get_api_data(url_obj['url _textbooks'], url_obj['textbooks_parameters'], url_obj['header'])
-
-
-
-
-
-
-
+    #textbooks_data_response = get_api_data(url_obj['url _textbooks'], url_obj['textbooks_parameters'], url_obj['header'])
 
 
 if __name__ == '__main__':
