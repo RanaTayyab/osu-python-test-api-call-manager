@@ -26,7 +26,7 @@ def log_error(error_message):
     # Get the current datetime in PST
     pst_timezone = pytz.timezone('America/Los_Angeles')
     current_time = datetime.datetime.now(pst_timezone)
-    formatted_message = f"[{current_time}] {error_message}"
+    formatted_message = f'[{current_time}] {error_message}'
 
     # Append the error message to the logfile
     with open('logfile.txt', 'a') as file:
@@ -70,7 +70,7 @@ def get_api_data(url, parameters, header):
     :param header: The headers for API with authorization
     """
 
-    response = requests.get(f"{url}",
+    response = requests.get(f'{url}',
                             params=parameters,
                             headers=header,
                             timeout=10)
@@ -104,7 +104,7 @@ def show_tasks():
     api_options = config['apiOptions']
     print(config['generalStrings']['whichApi'])
     for i, option in enumerate(api_options, start=0):
-        print(f"{i}. {option}")
+        print(f'{i}. {option}')
 
 
 def get_user_choice():
@@ -184,12 +184,12 @@ def get_stops_vehicles_on_route(url_obj):
     routes_data_response = get_api_data(url_obj['url_routes']+'/'+url_obj['route_id'],
                                         url_obj['parameters'],
                                         url_obj['header'])
-    route_name = routes_data_response['data']["attributes"]["description"]
-    stops = routes_data_response['data']["attributes"]["stops"]
+    route_name = routes_data_response['data']['attributes']['description']
+    stops = routes_data_response['data']['attributes']['stops']
 
     for stop in stops:
-        stop_id = stop["stopID"]
-        description = stop["description"]
+        stop_id = stop['stopID']
+        description = stop['description']
         url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
         arrivals_data_response = get_api_data(url_obj['url_arrivals'],
                                               url_obj['parameters'],

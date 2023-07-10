@@ -1,0 +1,31 @@
+accessToken:
+  url: https://api.oregonstate.edu/oauth2/token
+  enhancer: 'Bearer '
+  payload:
+    grant_type: client_credentials
+    client_id: client_id
+    client_secret: client_secret
+  headers:
+    Content-Type: application/x-www-form-urlencoded;charset=utf-8
+httpResponses:
+  failed: 'Request failed with status code: '
+  success: 'Sucessfully fetched the data: '
+apiOptions:
+  - Quit
+  - Beavers Bus
+  - Terms
+  - Search Text Books of a Term by a custom/any Date
+  - Get Details of a Vehicle and its Stops given a specified Route, with ETA and current destination
+generalStrings:
+  whichApi: Which API data do you want to check?
+  enterChoice: 'Enter your choice (0 or 1 or 2 or 3 or 4): '
+  exiting: Exiting...
+  invalidChoice: Invalid choice. Please try again.
+apiUrls:
+  beaverBus: https://api.oregonstate.edu/v1/beaverbus/routes
+  terms: https://api.oregonstate.edu/v1/terms
+  textbooks: https://api.oregonstate.edu/v1/textbooks
+  routes: https://api.oregonstate.edu/v1/beaverbus/routes
+  arrivals: https://api.oregonstate.edu/v1/beaverbus/arrivals
+  vehicles: https://api.oregonstate.edu/v1/beaverbus/vehicles
+  
