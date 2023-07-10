@@ -216,8 +216,7 @@ if __name__ == '__main__':
             print(url_obj['url'])
             break
         if (
-            user_choice == '1'
-            or user_choice == '2'
+            user_choice in ('1', '2')
         ):
             api_call = get_api_data(url_obj['url'], url_obj['parameters'], url_obj['header'])
         elif user_choice == '3':
