@@ -75,14 +75,14 @@ def get_api_data(url, parameters, header):
                             headers=header,
                             timeout=10)
     if response.status_code == 200:
-        format_result(response.json())
+        # format_result(response.json())
         return response.json()
     else:
         print(response.status_code)
         generated_error = 'There is a '
         + str(response.status_code)
         + ' error with this request'
-        log_error(generated_error) 
+        log_error(generated_error)
 
 
 def format_result(data):
@@ -128,32 +128,66 @@ def get_url(choice):
     access_token = get_access_token()
     content_type = config['accessToken']['headers']['Content-Type']
     header = {'Content-Type': content_type, 'Authorization': access_token}
+    url_obj = {}
 
 
     if choice == '0':
         url_obj = {'url': config['generalStrings']['exiting'], 'parameters': {}, 'header': header}
-        return url_obj
     elif choice == '1':
         url_obj = {'url': config['apiUrls']['beaverBus'], 'parameters': {}, 'header': header}
-        return url_obj
     elif choice == '2':
         url_obj = {'url': config['apiUrls']['terms'], 'parameters': {}, 'header': header}
-        return url_obj
     elif choice == '3':
         user_date = input('Enter Date (yyyy-mm-dd): ')
-        url_obj = {'url _terms': config['apiUrls']['terms'], 'url _textbooks': config['apiUrls']['textbooks'], 'parameters': {'date': user_date}, 'header': header}
-        return url_obj
+        url_obj = {'url_terms': config['apiUrls']['terms'], 'url_textbooks': config['apiUrls']['textbooks'], 'parameters': {'date': user_date}, 'header': header}
+    elif choice == '4':
+        route_id = input('Enter Route Number: ')
+        url_obj = {'url_routes': config['apiUrls']['routes'], 'url_arrivals': config['apiUrls']['arrivals'], 'url_vehicles': config['apiUrls']['vehicles'], 'route_id': route_id,  'parameters': {}, 'header': header}
     else:
         print(config['generalStrings']['invalidChoice'])
+
+    return url_obj
 
 
 def get_text_books_with_date(url_obj):
    
-    terms_data_response = get_api_data(url_obj['url _terms'], url_obj['parameters'], url_obj['header'])
+    terms_data_response = get_api_data(url_obj['url_terms'], url_obj['parameters'], url_obj['header'])
     academicYear = terms_data_response['data'][0]['attributes']['calendarYear']
     term = terms_data_response['data'][0]['attributes']['season']
     url_obj['textbooks_parameters'] = {'academicYear': academicYear, 'term': term, 'subject': 'CS', 'courseNumber': '161'}
     #textbooks_data_response = get_api_data(url_obj['url _textbooks'], url_obj['textbooks_parameters'], url_obj['header'])
+
+
+def get_stops_vehicles_on_route(url_obj):
+   
+    routes_data_response = get_api_data(url_obj['url_routes']+'/'+url_obj['route_id'], url_obj['parameters'], url_obj['header'])
+    #print(routes_data_response)
+    route_name = routes_data_response['data']["attributes"]["description"]
+    stops = routes_data_response['data']["attributes"]["stops"]
+
+    for stop in stops:
+        stop_id = stop["stopID"]
+        
+        description = stop["description"]
+        url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+        #print(url_obj)
+        arrivals_data_response = get_api_data(url_obj['url_arrivals'], url_obj['parameters'], url_obj['header'])
+        get_vehicle_id = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['vehicleID']
+        get_eta_at_Stop = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['eta']
+
+        url_obj['parameters'] = {}
+        vehicles_data_response = get_api_data(url_obj['url_vehicles']+'/'+get_vehicle_id, url_obj['parameters'], url_obj['header'])
+        get_vehicle_name = vehicles_data_response['data']['attributes']['name']
+        get_vehicle_heading = vehicles_data_response['data']['attributes']['heading']
+
+        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_Stop}")
+
+    
+    
+
+            
+
+    #print(stops)
 
 
 if __name__ == '__main__':
@@ -174,3 +208,5 @@ if __name__ == '__main__':
             api_call = get_api_data(url_obj['url'], url_obj['parameters'], url_obj['header'])
         elif user_choice == '3':
             api_call = get_text_books_with_date(url_obj)
+        elif user_choice == '4':
+            api_call = get_stops_vehicles_on_route(url_obj)
