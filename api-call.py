@@ -4,6 +4,7 @@ import json
 import pytz
 import requests
 import yaml
+import logging
 from typing import Dict, Any
 
 
@@ -39,6 +40,23 @@ class ApiManager:
         with open('logfile.txt', 'a') as file:
             file.write(formatted_message + '\n')
 
+    
+    def log_message(self, message: str) -> None:
+        # Get the current datetime in PST
+        pst_timezone = pytz.timezone('America/Los_Angeles')
+        current_time = datetime.datetime.now(pst_timezone)
+
+        # Configure the logger
+        logging.basicConfig(
+            filename='logfile.log',
+            level=logging.INFO,
+            format='%(asctime)s [%(levelname)s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S %Z'
+        )
+
+        # Log the message with the current datetime
+        logging.info(f'{current_time}: {message}')
+
 
     def get_access_token(self) -> str:
         """Get access token from OAuth2 for connecting with OSU public APIs
@@ -62,7 +80,7 @@ class ApiManager:
             access_token_extended = f'Bearer {access_token}'
             return access_token_extended
         else:
-            self.log_error(f'Request failed with status code: {response.status_code}')
+            self.log_message(f'Request failed with status code: {response.status_code}')
             return ""
 
 
@@ -87,7 +105,7 @@ class ApiManager:
         else:
             print(response.status_code)
             generated_error = f'There is a {response.status_code} error with this request'
-            self.log_error(generated_error)
+            self.log_message(generated_error)
 
 
     def format_result(self, response: requests.Response) -> Any:
@@ -175,21 +193,22 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
-        terms_data = terms_data_response.get('data', [])
-        if terms_data:
-            first_term = terms_data[0]
-            if 'attributes' in first_term:
-                attributes = first_term['attributes']
-                calendar_year = attributes.get('calendarYear')
-                season = attributes.get('season')
-                if calendar_year is None:
-                    print("Error: 'calendarYear' attribute is missing or empty")
-                if season is None:
-                    print("Error: 'season' attribute is missing or empty")
+        if terms_data_response == 200:
+            terms_data = terms_data_response.get('data', [])
+            if terms_data:
+                first_term = terms_data[0]
+                if 'attributes' in first_term:
+                    attributes = first_term['attributes']
+                    calendar_year = attributes.get('calendarYear')
+                    season = attributes.get('season')
+                    if calendar_year is None:
+                        print("Error: 'calendarYear' attribute is missing or empty")
+                    if season is None:
+                        print("Error: 'season' attribute is missing or empty")
+                else:
+                    print("Error: 'attributes' key is missing in the first term object")
             else:
-                print("Error: 'attributes' key is missing in the first term object")
-        else:
-            print("Error: 'data' key is missing or empty")
+                print("Error: 'data' key is missing or empty")
 
 
     def get_stops_vehicles_on_route(self, url_obj: Dict[str, Any]) -> None:
@@ -203,86 +222,89 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
-        if 'data' in routes_data_response:
-            route_data = routes_data_response['data']
+        if routes_data_response == 200:
+            if 'data' in routes_data_response:
+                route_data = routes_data_response['data']
 
-            if 'attributes' in route_data:
-                route_attributes = route_data['attributes']
+                if 'attributes' in route_data:
+                    route_attributes = route_data['attributes']
 
-                if 'description' in route_attributes:
-                    route_name = route_attributes['description']
-                else:
-                    print("Error: 'description' key is missing in route attributes")
-            else:
-                print("Error: 'attributes' key is missing in route data")
-        else:
-            print("Error: 'data' key is missing in routes data")
-
-        stops = route_attributes.get('stops', [])
-
-        for stop in stops:
-            if 'stopID' in stop and 'description' in stop:
-                stop_id = stop['stopID']
-                description = stop['description']
-
-                url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
-                arrivals_data_response = self.get_api_data(
-                    url_obj['url_arrivals'],
-                    url_obj['parameters'],
-                    url_obj['header']
-                )
-
-                if 'data' in arrivals_data_response:
-                    arrivals_data = arrivals_data_response['data']
-
-                    if arrivals_data and 'attributes' in arrivals_data[0]:
-                        arrivals_attributes = arrivals_data[0]['attributes']
-
-                        if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
-                            first_arrival = arrivals_attributes['arrivals'][0]
-
-                            if 'vehicleID' in first_arrival and 'eta' in first_arrival:
-                                get_vehicle_id = first_arrival['vehicleID']
-                                get_eta_at_stop = first_arrival['eta']
-
-                                vehicles_data_response = self.get_api_data(
-                                    f"{url_obj['url_vehicles']}/{get_vehicle_id}",
-                                    {},
-                                    url_obj['header']
-                                )
-
-                                if 'data' in vehicles_data_response:
-                                    vehicles_data = vehicles_data_response['data']
-
-                                    if 'attributes' in vehicles_data:
-                                        vehicles_attributes = vehicles_data['attributes']
-
-                                        if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
-                                            get_vehicle_name = vehicles_attributes['name']
-                                            get_vehicle_heading = vehicles_attributes['heading']
-                                        
-                                        else:
-                                            print("Error: 'name' or 'heading' key is missing in vehicles attributes")
-                                    else:
-                                        print("Error: 'attributes' key is missing in vehicles data")
-                                else:
-                                    print("Error: 'data' key is missing in vehicles data response")
-                            else:
-                                print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
-                        else:
-                            print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                    if 'description' in route_attributes:
+                        route_name = route_attributes['description']
                     else:
-                        print("Error: 'attributes' key is missing or empty in the first arrivals data")
+                        print("Error: 'description' key is missing in route attributes")
                 else:
-                    print("Error: 'data' key is missing in arrivals data response")
+                    print("Error: 'attributes' key is missing in route data")
             else:
-                print("Error: 'stopID' or 'description' key is missing in stop object")
+                print("Error: 'data' key is missing in routes data")
 
-            print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
+            stops = route_attributes.get('stops', [])
+
+            for stop in stops:
+                if 'stopID' in stop and 'description' in stop:
+                    stop_id = stop['stopID']
+                    description = stop['description']
+
+                    url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+                    arrivals_data_response = self.get_api_data(
+                        url_obj['url_arrivals'],
+                        url_obj['parameters'],
+                        url_obj['header']
+                    )
+                    if arrivals_data_response == 200:
+
+                        if 'data' in arrivals_data_response:
+                            arrivals_data = arrivals_data_response['data']
+
+                            if arrivals_data and 'attributes' in arrivals_data[0]:
+                                arrivals_attributes = arrivals_data[0]['attributes']
+
+                                if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
+                                    first_arrival = arrivals_attributes['arrivals'][0]
+
+                                    if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                                        get_vehicle_id = first_arrival['vehicleID']
+                                        get_eta_at_stop = first_arrival['eta']
+
+                                        vehicles_data_response = self.get_api_data(
+                                            f"{url_obj['url_vehicles']}/{get_vehicle_id}",
+                                            {},
+                                            url_obj['header']
+                                        )
+                                        if vehicles_data_response == 200:
+
+                                            if 'data' in vehicles_data_response:
+                                                vehicles_data = vehicles_data_response['data']
+
+                                                if 'attributes' in vehicles_data:
+                                                    vehicles_attributes = vehicles_data['attributes']
+
+                                                    if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
+                                                        get_vehicle_name = vehicles_attributes['name']
+                                                        get_vehicle_heading = vehicles_attributes['heading']
+                                                    
+                                                    else:
+                                                        print("Error: 'name' or 'heading' key is missing in vehicles attributes")
+                                                else:
+                                                    print("Error: 'attributes' key is missing in vehicles data")
+                                            else:
+                                                print("Error: 'data' key is missing in vehicles data response")
+                                        else:
+                                            print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
+                                    else:
+                                        print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                                else:
+                                    print("Error: 'attributes' key is missing or empty in the first arrivals data")
+                            else:
+                                print("Error: 'data' key is missing in arrivals data response")
+                        else:
+                            print("Error: 'stopID' or 'description' key is missing in stop object")
+
+                        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
 
     def main(self) -> None:
-        """Driver function
+        """Driver function of class
         """
         while True:
             self.show_tasks()
