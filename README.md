@@ -11,7 +11,7 @@ The API Manager is a Python class that allows you to interact with various OSU's
 
 ## Installation
 
-To use the API Manager, you need to have Python installed on your system. You can download Python from the official website: [Python.org](https://www.python.org/)
+To use the API Manager, you need to have Python `3.9+` installed on your system. You can download Python from the official website: [Python.org](https://www.python.org/)
 
 ## Setup
 
@@ -78,12 +78,12 @@ The API Manager provides two logging methods: `log_error` and `log_message`. The
 ```python
 api_manager.log_message("This is a general log message")
 ```
-Log messages will be appended to the logfile.log file in the project directory.
+Log messages will be appended to the `logfile.log` file in the project directory.
 
 ## Contributing
 
-Contributions to the API Manager project are welcome. If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository: API Manager
+Contributions to the API Manager project are welcome. If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the `MIT License`.
