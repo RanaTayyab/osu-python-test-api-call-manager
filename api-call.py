@@ -42,7 +42,12 @@ class ApiManager:
 
     
     def log_message(self, message: str) -> None:
-        # Get the current datetime in PST
+        """Logging any messages in the logfile.log
+        with date time information in PST
+
+        :param message: The message to log in file
+        :return: None
+        """
         pst_timezone = pytz.timezone('America/Los_Angeles')
         current_time = datetime.datetime.now(pst_timezone)
 
@@ -54,7 +59,6 @@ class ApiManager:
             datefmt='%Y-%m-%d %H:%M:%S %Z'
         )
 
-        # Log the message with the current datetime
         logging.info(f'{current_time}: {message}')
 
 
