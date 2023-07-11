@@ -199,7 +199,7 @@ def get_stops_vehicles_on_route(url_obj):
     """
 
     routes_data_response = get_api_data(
-        url_obj['url_routes']+'/'+url_obj['route_id'],
+        f"{url_obj['url_routes']}/{url_obj['route_id']}",
         url_obj['parameters'],
         url_obj['header']
     )
@@ -246,7 +246,7 @@ def get_stops_vehicles_on_route(url_obj):
                             get_eta_at_Stop = first_arrival['eta']
 
                             vehicles_data_response = get_api_data(
-                                url_obj['url_vehicles']+'/'+get_vehicle_id,
+                                f"{url_obj['url_vehicles']}/{get_vehicle_id}",
                                 {},
                                 url_obj['header']
                             )
