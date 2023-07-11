@@ -4,13 +4,15 @@ import json
 import pytz
 import requests
 import yaml
+from typing import Dict, Any
+
 
 class ApiManager:
     def __init__(self):
         self.config = self.load_from_config()
 
 
-    def load_from_config(self):
+    def load_from_config(self) -> Any:
         """Loading important parameters from configuration file
 
         :returns: The config object
@@ -20,11 +22,12 @@ class ApiManager:
             return yaml.safe_load(file)
 
 
-    def log_error(self, error_message):
+    def log_error(self, error_message: str) -> None:
         """Logging any error messages in the file and appending
         with date time information in PST
 
-        :param error_message: The error message to log in file comes as a string
+        :param error_message: The error message to log in file as a string
+        :return: None
         """
 
         # Get the current datetime in PST
@@ -37,7 +40,7 @@ class ApiManager:
             file.write(formatted_message + '\n')
 
 
-    def get_access_token(self):
+    def get_access_token(self) -> str:
         """Get access token from OAuth2 for connecting with OSU public APIs
 
         :returns: The access token string
@@ -60,14 +63,16 @@ class ApiManager:
             return access_token_extended
         else:
             self.log_error(f'Request failed with status code: {response.status_code}')
+            return ""
 
 
-    def get_api_data(self, url, parameters, header):
+    def get_api_data(self, url: str, parameters: Dict[str, Any], header: Dict[str, str]) -> Any:
         """Get Request for getting the data from API
 
         :param url: URL of the API
         :param parameters: The parameters for API
         :param header: The headers for API with authorization
+        :return: The response data from the API
         """
 
         response = requests.get(
@@ -85,10 +90,11 @@ class ApiManager:
             self.log_error(generated_error)
 
 
-    def format_result(self, response):
-        """Prints data in a specified format
+    def format_result(self, response: requests.Response) -> Any:
+        """Returns data from response object after JSON validation
 
-        :param data: check valid json and data fetched from API
+        :param response: The API response object
+        :return: The validated data
         """
         try:
             data = response.json()
@@ -99,7 +105,7 @@ class ApiManager:
         return data
 
 
-    def show_tasks(self):
+    def show_tasks(self) -> None:
         """Show tasks to choose as a Menu
         """
         api_options = ['Quit',
@@ -113,7 +119,7 @@ class ApiManager:
             print(f'{i}. {option}')
 
 
-    def get_user_choice(self):
+    def get_user_choice(self) -> str:
         """Get user input from menu
 
         :returns: The user choice
@@ -121,7 +127,7 @@ class ApiManager:
         return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
 
 
-    def get_url(self, choice):
+    def get_url(self, choice: str) -> Dict[str, Any]:
         """Get URL for API
 
         :param choice: user choice input
@@ -160,7 +166,7 @@ class ApiManager:
         return url_obj
 
 
-    def get_text_books_with_term_date(self, url_obj):
+    def get_text_books_with_term_date(self, url_obj: Dict[str, Any]) -> None:
         """Get text books based on specified term and date
         """
 
@@ -186,7 +192,7 @@ class ApiManager:
             print("Error: 'data' key is missing or empty")
 
 
-    def get_stops_vehicles_on_route(self, url_obj):
+    def get_stops_vehicles_on_route(self, url_obj: Dict[str, Any]) -> None:
         """Get stops and vehicles on a given route
         and determine where it is heading in real time
         and the ETA for the stop
