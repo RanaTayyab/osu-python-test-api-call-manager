@@ -44,7 +44,7 @@ def get_access_token():
     url = config['access_token']['url']
     payload = config['access_token']['payload']
     payload['grant_type'] = 'client_credentials'
-    headers = config['access_token']['headers']
+    headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
 
     response = requests.post(
         url,
@@ -103,8 +103,13 @@ def show_tasks():
 
     config = load_from_config()
     # Get the API options from the config
-    api_options = config['api_options']
-    print(config['general_strings']['which_api'])
+    api_options = ['Quit',
+                   'Beavers Bus',
+                   'Terms',
+                   'Search Text Books of a Term by a custom/any Date',
+                   'Get Details of a Vehicle and its Stops given a specified Route, with ETA and current destination']
+    
+    print('Which API data do you want to check?')
     for i, option in enumerate(api_options):
         print(f'{i}. {option}')
 
@@ -116,7 +121,7 @@ def get_user_choice():
     """
 
     config = load_from_config()
-    return input(config['general_strings']['enter_choice'])
+    return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
 
 
 def get_url(choice):
@@ -128,11 +133,10 @@ def get_url(choice):
 
     config = load_from_config()
     access_token = get_access_token()
-    content_type = config['access_token']['headers']['content_type']
-    header = {'Content-Type': content_type, 'Authorization': access_token}
+    header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': access_token}
     url_obj = {}
     if choice == '0':
-        url_obj = {'url': config['general_strings']['exiting'],
+        url_obj = {'url': 'Exiting.',
                    'parameters': {},
                    'header': header}
     elif choice == '1':
@@ -157,7 +161,7 @@ def get_url(choice):
                    'route_id': route_id,  'parameters': {},
                    'header': header}
     else:
-        print(config['general_strings']['invalid_choice'])
+        print('Invalid choice. Please try again.')
 
     return url_obj
 
