@@ -197,7 +197,7 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
-        if terms_data_response.status_code == 200:
+        if terms_data_response:
             terms_data = terms_data_response.get('data', [])
             if terms_data:
                 first_term = terms_data[0]
@@ -304,7 +304,7 @@ class ApiManager:
                         else:
                             print("Error: 'stopID' or 'description' key is missing in stop object")
 
-                        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
+                        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}, Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
     def main(self) -> None:
         """Driver function of class
