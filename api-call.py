@@ -76,7 +76,8 @@ def get_api_data(url, parameters, header):
         timeout=10
     )
     if response.status_code == 200:
-        return response.json()
+        response_data = format_result(response)
+        return response_data
     else:
         print(response.status_code)
         generated_error = f'There is a {response.status_code} error with this request'
@@ -94,7 +95,8 @@ def format_result(response):
         print("Invalid JSON response")
 
     text = json.dumps(data, indent=4)
-    print(text)
+    # print(text)
+    return data
 
 
 def show_tasks():
@@ -136,9 +138,7 @@ def get_url(choice):
     header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': access_token}
     url_obj = {}
     if choice == '0':
-        url_obj = {'url': 'Exiting.',
-                   'parameters': {},
-                   'header': header}
+        return 'Exiting...'
     elif choice == '1':
         url_obj = {'url': config['apiUrls']['beaver_bus'],
                    'parameters': {},
@@ -175,12 +175,21 @@ def get_text_books_with_term_date(url_obj):
         url_obj['parameters'],
         url_obj['header']
     )
-    academic_year = terms_data_response['data'][0]['attributes']['calendarYear']
-    term = terms_data_response['data'][0]['attributes']['season']
-    url_obj['textbooks_parameters'] = {'academicYear': academic_year,
-                                       'term': term,
-                                       'subject': 'CS',
-                                       'courseNumber': '161'}
+    terms_data = terms_data_response.get('data', [])
+    if terms_data:
+        first_term = terms_data[0]
+        if 'attributes' in first_term:
+            attributes = first_term['attributes']
+            calendar_year = attributes.get('calendarYear')
+            season = attributes.get('season')
+            if calendar_year is None:
+                print("Error: 'calendarYear' attribute is missing or empty")
+            if season is None:
+                print("Error: 'season' attribute is missing or empty")
+        else:
+            print("Error: 'attributes' key is missing in the first term object")
+    else:
+        print("Error: 'data' key is missing or empty")
 
 
 def get_stops_vehicles_on_route(url_obj):
@@ -194,27 +203,80 @@ def get_stops_vehicles_on_route(url_obj):
         url_obj['parameters'],
         url_obj['header']
     )
-    route_name = routes_data_response['data']['attributes']['description']
-    stops = routes_data_response['data']['attributes']['stops']
+    if 'data' in routes_data_response:
+        route_data = routes_data_response['data']
+
+        if 'attributes' in route_data:
+            route_attributes = route_data['attributes']
+
+            if 'description' in route_attributes:
+                route_name = route_attributes['description']
+            else:
+                print("Error: 'description' key is missing in route attributes")
+        else:
+            print("Error: 'attributes' key is missing in route data")
+    else:
+        print("Error: 'data' key is missing in routes data")
+
+    stops = route_attributes.get('stops', [])
 
     for stop in stops:
-        stop_id = stop['stopID']
-        description = stop['description']
-        url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
-        arrivals_data_response = get_api_data(
-            url_obj['url_arrivals'],
-            url_obj['parameters'],
-            url_obj['header']
-        )
-        get_vehicle_id = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['vehicleID']
-        get_eta_at_Stop = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['eta']
-        vehicles_data_response = get_api_data(
-            url_obj['url_vehicles']+'/'+get_vehicle_id,
-            {},
-            url_obj['header']
-        )
-        get_vehicle_name = vehicles_data_response['data']['attributes']['name']
-        get_vehicle_heading = vehicles_data_response['data']['attributes']['heading']
+        if 'stopID' in stop and 'description' in stop:
+            stop_id = stop['stopID']
+            description = stop['description']
+
+            url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+            arrivals_data_response = get_api_data(
+                url_obj['url_arrivals'],
+                url_obj['parameters'],
+                url_obj['header']
+            )
+
+            if 'data' in arrivals_data_response:
+                arrivals_data = arrivals_data_response['data']
+
+                if arrivals_data and 'attributes' in arrivals_data[0]:
+                    arrivals_attributes = arrivals_data[0]['attributes']
+
+                    if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
+                        first_arrival = arrivals_attributes['arrivals'][0]
+
+                        if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                            get_vehicle_id = first_arrival['vehicleID']
+                            get_eta_at_Stop = first_arrival['eta']
+
+                            vehicles_data_response = get_api_data(
+                                url_obj['url_vehicles']+'/'+get_vehicle_id,
+                                {},
+                                url_obj['header']
+                            )
+
+                            if 'data' in vehicles_data_response:
+                                vehicles_data = vehicles_data_response['data']
+
+                                if 'attributes' in vehicles_data:
+                                    vehicles_attributes = vehicles_data['attributes']
+
+                                    if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
+                                        get_vehicle_name = vehicles_attributes['name']
+                                        get_vehicle_heading = vehicles_attributes['heading']
+                                     
+                                    else:
+                                        print("Error: 'name' or 'heading' key is missing in vehicles attributes")
+                                else:
+                                    print("Error: 'attributes' key is missing in vehicles data")
+                            else:
+                                print("Error: 'data' key is missing in vehicles data response")
+                        else:
+                            print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
+                    else:
+                        print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                else:
+                    print("Error: 'attributes' key is missing or empty in the first arrivals data")
+            else:
+                print("Error: 'data' key is missing in arrivals data response")
+        else:
+            print("Error: 'stopID' or 'description' key is missing in stop object")
 
         print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_Stop}")
 
@@ -227,7 +289,7 @@ if __name__ == '__main__':
         user_choice = get_user_choice()
         url_obj = get_url(user_choice)
         if user_choice == '0':
-            print(url_obj['url'])
+            print(url_obj)
             break
         if (
             user_choice in ('1', '2')
