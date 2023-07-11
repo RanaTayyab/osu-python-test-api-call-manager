@@ -47,10 +47,12 @@ def get_access_token():
     headers = config['accessToken']['headers']
     http_failed = config['httpResponses']['failed']
 
-    response = requests.post(url,
-                             data=payload,
-                             headers=headers,
-                             timeout=10)
+    response = requests.post(
+        url,
+        data=payload,
+        headers=headers,
+        timeout=10
+    )
 
     if response.status_code == 200:
         # Request was successful
@@ -70,10 +72,12 @@ def get_api_data(url, parameters, header):
     :param header: The headers for API with authorization
     """
 
-    response = requests.get(f'{url}',
-                            params=parameters,
-                            headers=header,
-                            timeout=10)
+    response = requests.get(
+        f'{url}',
+        params=parameters,
+        headers=header,
+        timeout=10
+    )
     if response.status_code == 200:
         # format_result(response.json())
         return response.json()
@@ -164,9 +168,11 @@ def get_text_books_with_term_date(url_obj):
     """Get text books based on specified term and date
     """
 
-    terms_data_response = get_api_data(url_obj['url_terms'],
-                                       url_obj['parameters'],
-                                       url_obj['header'])
+    terms_data_response = get_api_data(
+        url_obj['url_terms'],
+        url_obj['parameters'],
+        url_obj['header']
+    )
     academic_year = terms_data_response['data'][0]['attributes']['calendarYear']
     term = terms_data_response['data'][0]['attributes']['season']
     url_obj['textbooks_parameters'] = {'academicYear': academic_year,
@@ -181,9 +187,11 @@ def get_stops_vehicles_on_route(url_obj):
     and the ETA for the stop
     """
 
-    routes_data_response = get_api_data(url_obj['url_routes']+'/'+url_obj['route_id'],
-                                        url_obj['parameters'],
-                                        url_obj['header'])
+    routes_data_response = get_api_data(
+        url_obj['url_routes']+'/'+url_obj['route_id'],
+        url_obj['parameters'],
+        url_obj['header']
+    )
     route_name = routes_data_response['data']['attributes']['description']
     stops = routes_data_response['data']['attributes']['stops']
 
@@ -191,14 +199,18 @@ def get_stops_vehicles_on_route(url_obj):
         stop_id = stop['stopID']
         description = stop['description']
         url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
-        arrivals_data_response = get_api_data(url_obj['url_arrivals'],
-                                              url_obj['parameters'],
-                                              url_obj['header'])
+        arrivals_data_response = get_api_data(
+            url_obj['url_arrivals'],
+            url_obj['parameters'],
+            url_obj['header']
+        )
         get_vehicle_id = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['vehicleID']
         get_eta_at_Stop = arrivals_data_response['data'][0]['attributes']['arrivals'][0]['eta']
-        vehicles_data_response = get_api_data(url_obj['url_vehicles']+'/'+get_vehicle_id,
-                                              {},
-                                              url_obj['header'])
+        vehicles_data_response = get_api_data(
+            url_obj['url_vehicles']+'/'+get_vehicle_id,
+            {},
+            url_obj['header']
+        )
         get_vehicle_name = vehicles_data_response['data']['attributes']['name']
         get_vehicle_heading = vehicles_data_response['data']['attributes']['heading']
 
@@ -218,7 +230,11 @@ if __name__ == '__main__':
         if (
             user_choice in ('1', '2')
         ):
-            api_call = get_api_data(url_obj['url'], url_obj['parameters'], url_obj['header'])
+            api_call = get_api_data(
+                url_obj['url'],
+                url_obj['parameters'],
+                url_obj['header']
+            )
         elif user_choice == '3':
             api_call = get_text_books_with_term_date(url_obj)
         elif user_choice == '4':
