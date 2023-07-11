@@ -42,10 +42,9 @@ def get_access_token():
     # Load configurations from the YAML file
     config = load_from_config()
     url = config['accessToken']['url']
-    enhancer = config['accessToken']['enhancer']
     payload = config['accessToken']['payload']
+    payload['grant_type'] = 'client_credentials'
     headers = config['accessToken']['headers']
-    http_failed = config['httpResponses']['failed']
 
     response = requests.post(
         url,
@@ -55,13 +54,11 @@ def get_access_token():
     )
 
     if response.status_code == 200:
-        # Request was successful
         access_token = response.json()['access_token']
-        if access_token:
-            access_token = enhancer + access_token
-        return access_token
+        access_token_extended = f'Bearer {access_token}'
+        return access_token_extended
     else:
-        log_error(str(http_failed) + str(response.status_code))
+        log_error(f'Request failed with status code: {response.status_code}')
 
 
 def get_api_data(url, parameters, header):

@@ -1,15 +1,10 @@
 accessToken:
   url: https://api.oregonstate.edu/oauth2/token
-  enhancer: 'Bearer '
   payload:
-    grant_type: client_credentials
     client_id: client_id
     client_secret: client_secret
   headers:
     Content-Type: application/x-www-form-urlencoded;charset=utf-8
-httpResponses:
-  failed: 'Request failed with status code: '
-  success: 'Sucessfully fetched the data: '
 apiOptions:
   - Quit
   - Beavers Bus
@@ -28,4 +23,3 @@ apiUrls:
   routes: https://api.oregonstate.edu/v1/beaverbus/routes
   arrivals: https://api.oregonstate.edu/v1/beaverbus/arrivals
   vehicles: https://api.oregonstate.edu/v1/beaverbus/vehicles
-  
