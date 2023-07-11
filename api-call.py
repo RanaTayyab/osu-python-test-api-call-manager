@@ -70,27 +70,28 @@ def get_api_data(url, parameters, header):
     """
 
     response = requests.get(
-        f'{url}',
+        url,
         params=parameters,
         headers=header,
         timeout=10
     )
     if response.status_code == 200:
-        # format_result(response.json())
         return response.json()
     else:
         print(response.status_code)
-        generated_error = 'There is a '
-        + str(response.status_code)
-        + ' error with this request'
+        generated_error = f'There is a {response.status_code} error with this request'
         log_error(generated_error)
 
 
-def format_result(data):
+def format_result(response):
     """Prints data in a specified format
 
-    :param data: data fetched from API
+    :param data: check valid json and data fetched from API
     """
+    try:
+        data = response.json()
+    except json.decoder.JSONDecodeError:
+        print("Invalid JSON response")
 
     text = json.dumps(data, indent=4)
     print(text)
@@ -104,7 +105,7 @@ def show_tasks():
     # Get the API options from the config
     api_options = config['apiOptions']
     print(config['generalStrings']['whichApi'])
-    for i, option in enumerate(api_options, start=0):
+    for i, option in enumerate(api_options):
         print(f'{i}. {option}')
 
 
