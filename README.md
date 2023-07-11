@@ -1,6 +1,6 @@
 # API Manager
 
-The API Manager is a Python class that allows you to interact with various Public OSU APIs and perform different operations based on user input. It provides functionalities to retrieve access tokens, make public API requests, log errors, and display menu options for the user to choose from, such as:
+The API Manager is a Python class that allows you to interact with various OSU's Public APIs and perform different operations collectively based on user input. It provides functionalities to retrieve access tokens, make public API requests, log errors, and display menu options for the user to choose from, such as:
 
 * Beaver Bus
 * Terms API
