@@ -41,10 +41,10 @@ def get_access_token():
 
     # Load configurations from the YAML file
     config = load_from_config()
-    url = config['accessToken']['url']
-    payload = config['accessToken']['payload']
+    url = config['access_token']['url']
+    payload = config['access_token']['payload']
     payload['grant_type'] = 'client_credentials'
-    headers = config['accessToken']['headers']
+    headers = config['access_token']['headers']
 
     response = requests.post(
         url,
@@ -103,8 +103,8 @@ def show_tasks():
 
     config = load_from_config()
     # Get the API options from the config
-    api_options = config['apiOptions']
-    print(config['generalStrings']['whichApi'])
+    api_options = config['api_options']
+    print(config['general_strings']['which_api'])
     for i, option in enumerate(api_options):
         print(f'{i}. {option}')
 
@@ -116,7 +116,7 @@ def get_user_choice():
     """
 
     config = load_from_config()
-    return input(config['generalStrings']['enterChoice'])
+    return input(config['general_strings']['enter_choice'])
 
 
 def get_url(choice):
@@ -128,15 +128,15 @@ def get_url(choice):
 
     config = load_from_config()
     access_token = get_access_token()
-    content_type = config['accessToken']['headers']['Content-Type']
+    content_type = config['access_token']['headers']['content_type']
     header = {'Content-Type': content_type, 'Authorization': access_token}
     url_obj = {}
     if choice == '0':
-        url_obj = {'url': config['generalStrings']['exiting'],
+        url_obj = {'url': config['general_strings']['exiting'],
                    'parameters': {},
                    'header': header}
     elif choice == '1':
-        url_obj = {'url': config['apiUrls']['beaverBus'],
+        url_obj = {'url': config['apiUrls']['beaver_bus'],
                    'parameters': {},
                    'header': header}
     elif choice == '2':
@@ -157,7 +157,7 @@ def get_url(choice):
                    'route_id': route_id,  'parameters': {},
                    'header': header}
     else:
-        print(config['generalStrings']['invalidChoice'])
+        print(config['general_strings']['invalid_choice'])
 
     return url_obj
 
