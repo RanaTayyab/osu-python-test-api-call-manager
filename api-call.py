@@ -5,301 +5,296 @@ import pytz
 import requests
 import yaml
 
-
-def load_from_config():
-    """Loading important parameters from configuration file
-
-    :returns: The config object
-    """
-
-    with open('configuration.yaml', 'r') as file:
-        return yaml.safe_load(file)
+class ApiManager:
+    def __init__(self):
+        self.config = self.load_from_config()
 
 
-def log_error(error_message):
-    """Logging any error messages in the file and appending
-    with date time information in PST
+    def load_from_config(self):
+        """Loading important parameters from configuration file
 
-    :param error_message: The error message to log in file comes as a string
-    """
+        :returns: The config object
+        """
 
-    # Get the current datetime in PST
-    pst_timezone = pytz.timezone('America/Los_Angeles')
-    current_time = datetime.datetime.now(pst_timezone)
-    formatted_message = f'[{current_time}] {error_message}'
-
-    # Append the error message to the logfile
-    with open('logfile.txt', 'a') as file:
-        file.write(formatted_message + '\n')
+        with open('configuration.yaml', 'r') as file:
+            return yaml.safe_load(file)
 
 
-def get_access_token():
-    """Get access token from OAuth2 for connecting with OSU public APIs
+    def log_error(self, error_message):
+        """Logging any error messages in the file and appending
+        with date time information in PST
 
-    :returns: The access token string
-    """
+        :param error_message: The error message to log in file comes as a string
+        """
 
-    # Load configurations from the YAML file
-    config = load_from_config()
-    url = config['access_token']['url']
-    payload = config['access_token']['payload']
-    payload['grant_type'] = 'client_credentials'
-    headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
+        # Get the current datetime in PST
+        pst_timezone = pytz.timezone('America/Los_Angeles')
+        current_time = datetime.datetime.now(pst_timezone)
+        formatted_message = f'[{current_time}] {error_message}'
 
-    response = requests.post(
-        url,
-        data=payload,
-        headers=headers,
-        timeout=10
-    )
-
-    if response.status_code == 200:
-        access_token = response.json()['access_token']
-        access_token_extended = f'Bearer {access_token}'
-        return access_token_extended
-    else:
-        log_error(f'Request failed with status code: {response.status_code}')
+        # Append the error message to the logfile
+        with open('logfile.txt', 'a') as file:
+            file.write(formatted_message + '\n')
 
 
-def get_api_data(url, parameters, header):
-    """Get Request for getting the data from API
+    def get_access_token(self):
+        """Get access token from OAuth2 for connecting with OSU public APIs
 
-    :param url: URL of the API
-    :param parameters: The parameters for API
-    :param header: The headers for API with authorization
-    """
+        :returns: The access token string
+        """
+        url = self.config['access_token']['url']
+        payload = self.config['access_token']['payload']
+        payload['grant_type'] = 'client_credentials'
+        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
 
-    response = requests.get(
-        url,
-        params=parameters,
-        headers=header,
-        timeout=10
-    )
-    if response.status_code == 200:
-        response_data = format_result(response)
-        return response_data
-    else:
-        print(response.status_code)
-        generated_error = f'There is a {response.status_code} error with this request'
-        log_error(generated_error)
+        response = requests.post(
+            url,
+            data=payload,
+            headers=headers,
+            timeout=10
+        )
 
-
-def format_result(response):
-    """Prints data in a specified format
-
-    :param data: check valid json and data fetched from API
-    """
-    try:
-        data = response.json()
-    except json.decoder.JSONDecodeError:
-        print("Invalid JSON response")
-
-    text = json.dumps(data, indent=4)
-    # print(text)
-    return data
-
-
-def show_tasks():
-    """Show tasks to choose as a Menu
-    """
-
-    config = load_from_config()
-    # Get the API options from the config
-    api_options = ['Quit',
-                   'Beavers Bus',
-                   'Terms',
-                   'Search Text Books of a Term by a custom/any Date',
-                   'Get Details of a Vehicle and its Stops given a specified Route, with ETA and current destination']
-    
-    print('Which API data do you want to check?')
-    for i, option in enumerate(api_options):
-        print(f'{i}. {option}')
-
-
-def get_user_choice():
-    """Get user input from menu
-
-    :returns: The user choice
-    """
-
-    config = load_from_config()
-    return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
-
-
-def get_url(choice):
-    """Get URL for API
-
-    :param choice: user choice input
-    :returns: API URL Object after user choice
-    """
-
-    config = load_from_config()
-    access_token = get_access_token()
-    header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': access_token}
-    url_obj = {}
-    if choice == '0':
-        return 'Exiting...'
-    elif choice == '1':
-        url_obj = {'url': config['apiUrls']['beaver_bus'],
-                   'parameters': {},
-                   'header': header}
-    elif choice == '2':
-        url_obj = {'url': config['apiUrls']['terms'],
-                   'parameters': {},
-                   'header': header}
-    elif choice == '3':
-        user_date = input('Enter Date (yyyy-mm-dd): ')
-        url_obj = {'url_terms': config['apiUrls']['terms'],
-                   'url_textbooks': config['apiUrls']['textbooks'],
-                   'parameters': {'date': user_date},
-                   'header': header}
-    elif choice == '4':
-        route_id = input('Enter Route Number: ')
-        url_obj = {'url_routes': config['apiUrls']['routes'],
-                   'url_arrivals': config['apiUrls']['arrivals'],
-                   'url_vehicles': config['apiUrls']['vehicles'],
-                   'route_id': route_id,  'parameters': {},
-                   'header': header}
-    else:
-        print('Invalid choice. Please try again.')
-
-    return url_obj
-
-
-def get_text_books_with_term_date(url_obj):
-    """Get text books based on specified term and date
-    """
-
-    terms_data_response = get_api_data(
-        url_obj['url_terms'],
-        url_obj['parameters'],
-        url_obj['header']
-    )
-    terms_data = terms_data_response.get('data', [])
-    if terms_data:
-        first_term = terms_data[0]
-        if 'attributes' in first_term:
-            attributes = first_term['attributes']
-            calendar_year = attributes.get('calendarYear')
-            season = attributes.get('season')
-            if calendar_year is None:
-                print("Error: 'calendarYear' attribute is missing or empty")
-            if season is None:
-                print("Error: 'season' attribute is missing or empty")
+        if response.status_code == 200:
+            access_token = response.json()['access_token']
+            access_token_extended = f'Bearer {access_token}'
+            return access_token_extended
         else:
-            print("Error: 'attributes' key is missing in the first term object")
-    else:
-        print("Error: 'data' key is missing or empty")
+            self.log_error(f'Request failed with status code: {response.status_code}')
 
 
-def get_stops_vehicles_on_route(url_obj):
-    """Get stops and vehicles on a given route
-    and determine where it is heading in real time
-    and the ETA for the stop
-    """
+    def get_api_data(self, url, parameters, header):
+        """Get Request for getting the data from API
 
-    routes_data_response = get_api_data(
-        f"{url_obj['url_routes']}/{url_obj['route_id']}",
-        url_obj['parameters'],
-        url_obj['header']
-    )
-    if 'data' in routes_data_response:
-        route_data = routes_data_response['data']
+        :param url: URL of the API
+        :param parameters: The parameters for API
+        :param header: The headers for API with authorization
+        """
 
-        if 'attributes' in route_data:
-            route_attributes = route_data['attributes']
+        response = requests.get(
+            url,
+            params=parameters,
+            headers=header,
+            timeout=10
+        )
+        if response.status_code == 200:
+            response_data = self.format_result(response)
+            return response_data
+        else:
+            print(response.status_code)
+            generated_error = f'There is a {response.status_code} error with this request'
+            self.log_error(generated_error)
 
-            if 'description' in route_attributes:
-                route_name = route_attributes['description']
+
+    def format_result(self, response):
+        """Prints data in a specified format
+
+        :param data: check valid json and data fetched from API
+        """
+        try:
+            data = response.json()
+        except json.decoder.JSONDecodeError:
+            print("Invalid JSON response")
+
+        text = json.dumps(data, indent=4)
+        return data
+
+
+    def show_tasks(self):
+        """Show tasks to choose as a Menu
+        """
+        api_options = ['Quit',
+                    'Beavers Bus',
+                    'Terms',
+                    'Search Text Books of a Term by a custom/any Date',
+                    'Get Details of a Vehicle and its Stops given a specified Route, with ETA and current destination']
+        
+        print('Which API data do you want to check?')
+        for i, option in enumerate(api_options):
+            print(f'{i}. {option}')
+
+
+    def get_user_choice(self):
+        """Get user input from menu
+
+        :returns: The user choice
+        """
+        return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
+
+
+    def get_url(self, choice):
+        """Get URL for API
+
+        :param choice: user choice input
+        :returns: API URL Object after user choice
+        """
+
+        access_token = self.get_access_token()
+        header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': access_token}
+        url_obj = {}
+        if choice == '0':
+            return 'Exiting...'
+        elif choice == '1':
+            url_obj = {'url': self.config['apiUrls']['beaver_bus'],
+                    'parameters': {},
+                    'header': header}
+        elif choice == '2':
+            url_obj = {'url': self.config['apiUrls']['terms'],
+                    'parameters': {},
+                    'header': header}
+        elif choice == '3':
+            user_date = input('Enter Date (yyyy-mm-dd): ')
+            url_obj = {'url_terms': self.config['apiUrls']['terms'],
+                    'url_textbooks': self.config['apiUrls']['textbooks'],
+                    'parameters': {'date': user_date},
+                    'header': header}
+        elif choice == '4':
+            route_id = input('Enter Route Number: ')
+            url_obj = {'url_routes': self.config['apiUrls']['routes'],
+                    'url_arrivals': self.config['apiUrls']['arrivals'],
+                    'url_vehicles': self.config['apiUrls']['vehicles'],
+                    'route_id': route_id,  'parameters': {},
+                    'header': header}
+        else:
+            print('Invalid choice. Please try again.')
+
+        return url_obj
+
+
+    def get_text_books_with_term_date(self, url_obj):
+        """Get text books based on specified term and date
+        """
+
+        terms_data_response = self.get_api_data(
+            url_obj['url_terms'],
+            url_obj['parameters'],
+            url_obj['header']
+        )
+        terms_data = terms_data_response.get('data', [])
+        if terms_data:
+            first_term = terms_data[0]
+            if 'attributes' in first_term:
+                attributes = first_term['attributes']
+                calendar_year = attributes.get('calendarYear')
+                season = attributes.get('season')
+                if calendar_year is None:
+                    print("Error: 'calendarYear' attribute is missing or empty")
+                if season is None:
+                    print("Error: 'season' attribute is missing or empty")
             else:
-                print("Error: 'description' key is missing in route attributes")
+                print("Error: 'attributes' key is missing in the first term object")
         else:
-            print("Error: 'attributes' key is missing in route data")
-    else:
-        print("Error: 'data' key is missing in routes data")
+            print("Error: 'data' key is missing or empty")
 
-    stops = route_attributes.get('stops', [])
 
-    for stop in stops:
-        if 'stopID' in stop and 'description' in stop:
-            stop_id = stop['stopID']
-            description = stop['description']
+    def get_stops_vehicles_on_route(self, url_obj):
+        """Get stops and vehicles on a given route
+        and determine where it is heading in real time
+        and the ETA for the stop
+        """
 
-            url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
-            arrivals_data_response = get_api_data(
-                url_obj['url_arrivals'],
-                url_obj['parameters'],
-                url_obj['header']
-            )
+        routes_data_response = self.get_api_data(
+            f"{url_obj['url_routes']}/{url_obj['route_id']}",
+            url_obj['parameters'],
+            url_obj['header']
+        )
+        if 'data' in routes_data_response:
+            route_data = routes_data_response['data']
 
-            if 'data' in arrivals_data_response:
-                arrivals_data = arrivals_data_response['data']
+            if 'attributes' in route_data:
+                route_attributes = route_data['attributes']
 
-                if arrivals_data and 'attributes' in arrivals_data[0]:
-                    arrivals_attributes = arrivals_data[0]['attributes']
-
-                    if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
-                        first_arrival = arrivals_attributes['arrivals'][0]
-
-                        if 'vehicleID' in first_arrival and 'eta' in first_arrival:
-                            get_vehicle_id = first_arrival['vehicleID']
-                            get_eta_at_stop = first_arrival['eta']
-
-                            vehicles_data_response = get_api_data(
-                                f"{url_obj['url_vehicles']}/{get_vehicle_id}",
-                                {},
-                                url_obj['header']
-                            )
-
-                            if 'data' in vehicles_data_response:
-                                vehicles_data = vehicles_data_response['data']
-
-                                if 'attributes' in vehicles_data:
-                                    vehicles_attributes = vehicles_data['attributes']
-
-                                    if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
-                                        get_vehicle_name = vehicles_attributes['name']
-                                        get_vehicle_heading = vehicles_attributes['heading']
-                                     
-                                    else:
-                                        print("Error: 'name' or 'heading' key is missing in vehicles attributes")
-                                else:
-                                    print("Error: 'attributes' key is missing in vehicles data")
-                            else:
-                                print("Error: 'data' key is missing in vehicles data response")
-                        else:
-                            print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
-                    else:
-                        print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                if 'description' in route_attributes:
+                    route_name = route_attributes['description']
                 else:
-                    print("Error: 'attributes' key is missing or empty in the first arrivals data")
+                    print("Error: 'description' key is missing in route attributes")
             else:
-                print("Error: 'data' key is missing in arrivals data response")
+                print("Error: 'attributes' key is missing in route data")
         else:
-            print("Error: 'stopID' or 'description' key is missing in stop object")
+            print("Error: 'data' key is missing in routes data")
 
-        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
+        stops = route_attributes.get('stops', [])
+
+        for stop in stops:
+            if 'stopID' in stop and 'description' in stop:
+                stop_id = stop['stopID']
+                description = stop['description']
+
+                url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+                arrivals_data_response = self.get_api_data(
+                    url_obj['url_arrivals'],
+                    url_obj['parameters'],
+                    url_obj['header']
+                )
+
+                if 'data' in arrivals_data_response:
+                    arrivals_data = arrivals_data_response['data']
+
+                    if arrivals_data and 'attributes' in arrivals_data[0]:
+                        arrivals_attributes = arrivals_data[0]['attributes']
+
+                        if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
+                            first_arrival = arrivals_attributes['arrivals'][0]
+
+                            if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                                get_vehicle_id = first_arrival['vehicleID']
+                                get_eta_at_stop = first_arrival['eta']
+
+                                vehicles_data_response = self.get_api_data(
+                                    f"{url_obj['url_vehicles']}/{get_vehicle_id}",
+                                    {},
+                                    url_obj['header']
+                                )
+
+                                if 'data' in vehicles_data_response:
+                                    vehicles_data = vehicles_data_response['data']
+
+                                    if 'attributes' in vehicles_data:
+                                        vehicles_attributes = vehicles_data['attributes']
+
+                                        if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
+                                            get_vehicle_name = vehicles_attributes['name']
+                                            get_vehicle_heading = vehicles_attributes['heading']
+                                        
+                                        else:
+                                            print("Error: 'name' or 'heading' key is missing in vehicles attributes")
+                                    else:
+                                        print("Error: 'attributes' key is missing in vehicles data")
+                                else:
+                                    print("Error: 'data' key is missing in vehicles data response")
+                            else:
+                                print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
+                        else:
+                            print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                    else:
+                        print("Error: 'attributes' key is missing or empty in the first arrivals data")
+                else:
+                    print("Error: 'data' key is missing in arrivals data response")
+            else:
+                print("Error: 'stopID' or 'description' key is missing in stop object")
+
+            print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
 
 if __name__ == '__main__':
     """Driver function
     """
+    api_manager = ApiManager()
     while True:
-        show_tasks()
-        user_choice = get_user_choice()
-        url_obj = get_url(user_choice)
+        api_manager.show_tasks()
+        user_choice = api_manager.get_user_choice()
+        url_obj = api_manager.get_url(user_choice)
         if user_choice == '0':
             print(url_obj)
             break
         if (
             user_choice in ('1', '2')
         ):
-            api_call = get_api_data(
+            api_call = api_manager.get_api_data(
                 url_obj['url'],
                 url_obj['parameters'],
                 url_obj['header']
             )
         elif user_choice == '3':
-            api_call = get_text_books_with_term_date(url_obj)
+            api_call = api_manager.get_text_books_with_term_date(url_obj)
         elif user_choice == '4':
-            api_call = get_stops_vehicles_on_route(url_obj)
+            api_call = api_manager.get_stops_vehicles_on_route(url_obj)
