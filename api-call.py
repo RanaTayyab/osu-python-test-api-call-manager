@@ -243,7 +243,7 @@ def get_stops_vehicles_on_route(url_obj):
 
                         if 'vehicleID' in first_arrival and 'eta' in first_arrival:
                             get_vehicle_id = first_arrival['vehicleID']
-                            get_eta_at_Stop = first_arrival['eta']
+                            get_eta_at_stop = first_arrival['eta']
 
                             vehicles_data_response = get_api_data(
                                 f"{url_obj['url_vehicles']}/{get_vehicle_id}",
@@ -278,7 +278,7 @@ def get_stops_vehicles_on_route(url_obj):
         else:
             print("Error: 'stopID' or 'description' key is missing in stop object")
 
-        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_Stop}")
+        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
 
 if __name__ == '__main__':
