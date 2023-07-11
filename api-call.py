@@ -281,26 +281,29 @@ class ApiManager:
             print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}  , Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
 
+    def main(self) -> None:
+        """Driver function
+        """
+        while True:
+            self.show_tasks()
+            user_choice = self.get_user_choice()
+            url_obj = self.get_url(user_choice)
+            if user_choice == '0':
+                print(url_obj)
+                break
+            if (
+                user_choice in ('1', '2')
+            ):
+                self.get_api_data(
+                    url_obj['url'],
+                    url_obj['parameters'],
+                    url_obj['header']
+                )
+            elif user_choice == '3':
+                self.get_text_books_with_term_date(url_obj)
+            elif user_choice == '4':
+                self.get_stops_vehicles_on_route(url_obj)
+
 if __name__ == '__main__':
-    """Driver function
-    """
     api_manager = ApiManager()
-    while True:
-        api_manager.show_tasks()
-        user_choice = api_manager.get_user_choice()
-        url_obj = api_manager.get_url(user_choice)
-        if user_choice == '0':
-            print(url_obj)
-            break
-        if (
-            user_choice in ('1', '2')
-        ):
-            api_call = api_manager.get_api_data(
-                url_obj['url'],
-                url_obj['parameters'],
-                url_obj['header']
-            )
-        elif user_choice == '3':
-            api_call = api_manager.get_text_books_with_term_date(url_obj)
-        elif user_choice == '4':
-            api_call = api_manager.get_stops_vehicles_on_route(url_obj)
+    api_manager.main()
