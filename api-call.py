@@ -12,7 +12,6 @@ class ApiManager:
     def __init__(self):
         self.config = self.load_from_config()
 
-
     def load_from_config(self) -> Any:
         """Loading important parameters from configuration file
 
@@ -21,7 +20,6 @@ class ApiManager:
 
         with open('configuration.yaml', 'r') as file:
             return yaml.safe_load(file)
-
 
     def log_error(self, error_message: str) -> None:
         """Logging any error messages in the file and appending
@@ -40,7 +38,6 @@ class ApiManager:
         with open('logfile.txt', 'a') as file:
             file.write(formatted_message + '\n')
 
-    
     def log_message(self, message: str) -> None:
         """Logging any messages in the logfile.log
         with date time information in PST
@@ -61,7 +58,6 @@ class ApiManager:
 
         logging.info(f'{current_time}: {message}')
 
-
     def get_access_token(self) -> str:
         """Get access token from OAuth2 for connecting with OSU public APIs
 
@@ -81,12 +77,10 @@ class ApiManager:
 
         if response.status_code == 200:
             access_token = response.json()['access_token']
-            access_token_extended = f'Bearer {access_token}'
-            return access_token_extended
+            return f'Bearer {access_token}'
         else:
             self.log_message(f'Request failed with status code: {response.status_code}')
             return ''
-
 
     def get_api_data(self, url: str, parameters: Dict[str, Any], header: Dict[str, str]) -> Any:
         """Get Request for getting the data from API
@@ -104,13 +98,11 @@ class ApiManager:
             timeout=10
         )
         if response.status_code == 200:
-            response_data = self.format_result(response)
-            return response_data
+            return self.format_result(response)
         else:
             print(response.status_code)
             generated_error = f'There is a {response.status_code} error with this request'
             self.log_message(generated_error)
-
 
     def format_result(self, response: requests.Response) -> Any:
         """Returns data from response object after JSON validation
@@ -126,7 +118,6 @@ class ApiManager:
         text = json.dumps(data, indent=4)
         return data
 
-
     def show_tasks(self) -> None:
         """Show tasks to choose as a Menu
         """
@@ -140,14 +131,12 @@ class ApiManager:
         for i, option in enumerate(api_options):
             print(f'{i}. {option}')
 
-
     def get_user_choice(self) -> str:
         """Get user input from menu
 
         :returns: The user choice
         """
         return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
-
 
     def get_url(self, choice: str) -> Dict[str, Any]:
         """Get URL for API
@@ -187,7 +176,6 @@ class ApiManager:
 
         return url_obj
 
-
     def get_text_books_with_term_date(self, url_obj: Dict[str, Any]) -> None:
         """Get text books based on specified term and date
         """
@@ -213,7 +201,6 @@ class ApiManager:
                     print("Error: 'attributes' key is missing in the first term object")
             else:
                 print("Error: 'data' key is missing or empty")
-
 
     def get_stops_vehicles_on_route(self, url_obj: Dict[str, Any]) -> None:
         """Get stops and vehicles on a given route
@@ -328,6 +315,7 @@ class ApiManager:
                 self.get_text_books_with_term_date(url_obj)
             elif user_choice == '4':
                 self.get_stops_vehicles_on_route(url_obj)
+
 
 if __name__ == '__main__':
     api_manager = ApiManager()
