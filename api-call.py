@@ -1,11 +1,11 @@
 import datetime
 import json
+import logging
+from typing import Dict, Any, Union
 
 import pytz
 import requests
 import yaml
-import logging
-from typing import Dict, Any
 
 
 class ApiManager:
@@ -74,12 +74,12 @@ class ApiManager:
             headers=headers,
             timeout=10
         )
-
         if response.status_code == 200:
             access_token = response.json()['access_token']
             return f'Bearer {access_token}'
         else:
             self.log_message(f'Request failed with status code: {response.status_code}')
+            print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
             return ''
 
     def get_api_data(self, url: str, parameters: Dict[str, Any], header: Dict[str, str]) -> Any:
@@ -97,12 +97,11 @@ class ApiManager:
             headers=header,
             timeout=10
         )
-        if response.status_code == 200:
+        if response.status_code == 2000:
             return self.format_result(response)
         else:
-            print(response.status_code)
-            generated_error = f'There is a {response.status_code} error with this request'
-            self.log_message(generated_error)
+            print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
+            self.log_message(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
 
     def format_result(self, response: requests.Response) -> Any:
         """Returns data from response object after JSON validation
@@ -117,6 +116,28 @@ class ApiManager:
 
         text = json.dumps(data, indent=4)
         return data
+    
+    def get_http_status_description(self, status_code: int) -> Union[str, None]:
+        """Get the description of an HTTP status code.
+
+        :param status_code: The HTTP status code to get the description for.
+        :return: The description of the HTTP status code, or None if the status code is not recognized.
+        """
+
+        status_descriptions: Dict[int, str] = {
+            200: 'OK - The request has succeeded.',
+            400: 'Bad Request - The server could not understand the request due to invalid syntax or missing parameters.',
+            401: 'Unauthorized - The request requires user authentication or authentication failed.',
+            403: 'Forbidden - The server understood the request but refuses to authorize it.',
+            404: 'Not Found - The requested resource could not be found.',
+            500: 'Internal Server Error - The server encountered an unexpected condition that prevented it from fulfilling the request.',
+            502: 'Bad Gateway - The server received an invalid response from an upstream server.',
+            503: 'Service Unavailable - The server is currently unable to handle the request due to a temporary overload or maintenance.',
+            504: 'Gateway Timeout - The server did not receive a timely response from an upstream server.',
+            505: 'HTTP Version Not Supported - The server does not support the HTTP protocol version used in the request.'
+        }
+
+        return status_descriptions.get(status_code)
 
     def show_tasks(self) -> None:
         """Show tasks to choose as a Menu
