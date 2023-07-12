@@ -97,7 +97,7 @@ class ApiManager:
             headers=header,
             timeout=10
         )
-        if response.status_code == 2000:
+        if response.status_code == 200:
             return self.format_result(response)
         else:
             print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
