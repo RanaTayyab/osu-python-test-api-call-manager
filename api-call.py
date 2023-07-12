@@ -151,24 +151,24 @@ class ApiManager:
         if choice == '0':
             return 'Exiting...'
         elif choice == '1':
-            url_obj = {'url': self.config['apiUrls']['beaver_bus'],
+            url_obj = {'url': self.config['api_urls']['beaver_bus'],
                     'parameters': {},
                     'header': header}
         elif choice == '2':
-            url_obj = {'url': self.config['apiUrls']['terms'],
+            url_obj = {'url': self.config['api_urls']['terms'],
                     'parameters': {},
                     'header': header}
         elif choice == '3':
             user_date = input('Enter Date (yyyy-mm-dd): ')
-            url_obj = {'url_terms': self.config['apiUrls']['terms'],
-                    'url_textbooks': self.config['apiUrls']['textbooks'],
+            url_obj = {'url_terms': self.config['api_urls']['terms'],
+                    'url_textbooks': self.config['api_urls']['textbooks'],
                     'parameters': {'date': user_date},
                     'header': header}
         elif choice == '4':
             route_id = input('Enter Route Number: ')
-            url_obj = {'url_routes': self.config['apiUrls']['routes'],
-                    'url_arrivals': self.config['apiUrls']['arrivals'],
-                    'url_vehicles': self.config['apiUrls']['vehicles'],
+            url_obj = {'url_routes': self.config['api_urls']['routes'],
+                    'url_arrivals': self.config['api_urls']['arrivals'],
+                    'url_vehicles': self.config['api_urls']['vehicles'],
                     'route_id': route_id,  'parameters': {},
                     'header': header}
         else:

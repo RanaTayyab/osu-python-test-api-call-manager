@@ -3,7 +3,7 @@ access_token:
   payload:
     client_id: client_id
     client_secret: client_secret
-apiUrls:
+api_urls:
   beaver_bus: https://api.example.com/v1/beaverbus
   terms: https://api.example.com/v1/terms
   textbooks: https://api.example.com/v1/textbooks
