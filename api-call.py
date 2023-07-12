@@ -1,7 +1,7 @@
 import datetime
 import json
 import logging
-from typing import Dict, Any, Union
+from typing import Dict, Union
 
 import pytz
 import requests
@@ -12,7 +12,7 @@ class ApiManager:
     def __init__(self):
         self.config = self.load_from_config()
 
-    def load_from_config(self) -> Any:
+    def load_from_config(self) -> Dict:
         """Loading important parameters from configuration file
 
         :returns: The config object
@@ -82,7 +82,7 @@ class ApiManager:
             print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
             return ''
 
-    def get_api_data(self, url: str, parameters: Dict[str, Any], header: Dict[str, str]) -> Any:
+    def get_api_data(self, url: str, parameters: Dict[str, Dict], header: Dict[str, str]) -> Dict:
         """Get Request for getting the data from API
 
         :param url: URL of the API
@@ -103,7 +103,7 @@ class ApiManager:
             print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
             self.log_message(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
 
-    def format_result(self, response: requests.Response) -> Any:
+    def format_result(self, response: requests.Response) -> Dict:
         """Returns data from response object after JSON validation
 
         :param response: The API response object
@@ -159,7 +159,7 @@ class ApiManager:
         """
         return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
 
-    def get_url(self, choice: str) -> Dict[str, Any]:
+    def get_url(self, choice: str) -> Dict[str, Dict]:
         """Get URL for API
 
         :param choice: user choice input
@@ -197,7 +197,7 @@ class ApiManager:
 
         return url_obj
 
-    def get_text_books_with_term_date(self, url_obj: Dict[str, Any]) -> None:
+    def get_text_books_with_term_date(self, url_obj: Dict[str, Dict]) -> None:
         """Get text books based on specified term and date
         """
 
@@ -223,7 +223,7 @@ class ApiManager:
             else:
                 print("Error: 'data' key is missing or empty")
 
-    def get_stops_vehicles_on_route(self, url_obj: Dict[str, Any]) -> None:
+    def get_stops_vehicles_on_route(self, url_obj: Dict[str, Dict]) -> None:
         """Get stops and vehicles on a given route
         and determine where it is heading in real time
         and the ETA for the stop
