@@ -10,7 +10,13 @@ import yaml
 
 class ApiManager:
     def __init__(self):
-        self.config = self.load_from_config()
+        print("Started the process and validating 'configuration.yaml' file.")
+        validation = self.validate_config('configuration.yaml')
+        if validation:
+            self.config = self.load_from_config()
+        else:
+            print("'configuration.yaml' file is not correct.")
+            exit()
 
     def load_from_config(self) -> Dict:
         """Loading important parameters from configuration file
@@ -20,6 +26,71 @@ class ApiManager:
 
         with open('configuration.yaml', 'r') as file:
             return yaml.safe_load(file)
+        
+    def validate_config(self, config_path: str) -> bool:
+        """Validate the config.yaml file and verify the URLs.
+
+        :param config_path: The path to the config.yaml file.
+        :return: True if the config and URLs are valid, False otherwise.
+        """
+        try:
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            print(f"Error: Config file '{config_path}' not found.")
+            return False
+        except yaml.YAMLError:
+            print(f"Error: Invalid YAML syntax in '{config_path}'.")
+            return False
+
+        # Verify access_token URL
+        access_token_url = config.get('access_token', {}).get('url')
+        access_token_payload = config.get('access_token', {}).get('payload', {})
+        access_token_payload['grant_type'] = 'client_credentials'
+        access_token_header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
+        token = self.verify_url_token(access_token_url, access_token_header, access_token_payload)
+        if 'Bearer' not in token:
+            print(f'Error: Invalid access_token URL: {access_token_url}')
+            return False
+
+        # Verify API URLs
+        api_urls = config.get('api_urls', {})
+        header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': token}
+        for name, url in api_urls.items():
+            if not self.verify_urls(url, header):
+                print(f"Error: Invalid API URL '{name}': {url}")
+                return False
+
+        # All checks passed, config is valid
+        return True
+
+    def verify_urls(self, url: str, header: Dict[str, str]) -> bool:
+        """Verify the correctness and functionality of a URL.
+
+        :param url: The URL to verify.
+        :param header: The header to send with the request.
+        :return: True if the URL is valid and functional, False otherwise.
+        """
+        try:
+            response = requests.head(url, headers=header)
+            return response.status_code == requests.codes.ok
+        except requests.exceptions.RequestException:
+            return False
+
+    def verify_url_token(self, url: str, header: Dict[str, str], data: Dict[str, str] = None) -> str:
+        """Verify the correctness and functionality of a URL.
+
+        :param url: The URL to verify.
+        :param header: The header to send with the request.
+        :param data: The data to include in the request payload (optional).
+        :return: Token otherwise empty string.
+        """
+        try:
+            response = requests.post(url, headers=header, data=data)
+            access_token = response.json()['access_token']
+            return f'Bearer {access_token}'
+        except requests.exceptions.RequestException:
+            return ''
 
     def log_error(self, error_message: str) -> None:
         """Logging any error messages in the file and appending
