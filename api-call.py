@@ -47,7 +47,7 @@ class ApiManager:
         access_token_url = config.get('access_token', {}).get('url')
         access_token_payload = config.get('access_token', {}).get('payload', {})
         access_token_payload['grant_type'] = 'client_credentials'
-        access_token_header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
+        access_token_header = {'Content-Type': 'application/x-www-form-urlencoded'}
         token = self.verify_url_token(access_token_url, access_token_header, access_token_payload)
         if 'Bearer' not in token:
             print(f'Error: Invalid access_token URL: {access_token_url}')
@@ -55,7 +55,7 @@ class ApiManager:
 
         # Verify API URLs
         api_urls = config.get('api_urls', {})
-        header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': token}
+        header = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': token}
         for name, url in api_urls.items():
             if not self.verify_urls(url, header):
                 print(f"Error: Invalid API URL '{name}': {url}")
@@ -107,7 +107,7 @@ class ApiManager:
 
         # Append the error message to the logfile
         with open('logfile.txt', 'a') as file:
-            file.write(formatted_message + '\n')
+            file.write(f'{formatted_message}\n')
 
     def log_message(self, message: str) -> None:
         """Logging any messages in the logfile.log
@@ -137,7 +137,7 @@ class ApiManager:
         url = self.config['access_token']['url']
         payload = self.config['access_token']['payload']
         payload['grant_type'] = 'client_credentials'
-        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
         response = requests.post(
             url,
@@ -153,7 +153,7 @@ class ApiManager:
             print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
             return ''
 
-    def get_api_data(self, url: str, parameters: Dict[str, Dict], header: Dict[str, str]) -> Dict:
+    def get_api_data(self, url: str, parameters: Dict[str, str], header: Dict[str, str]) -> Dict:
         """Get Request for getting the data from API
 
         :param url: URL of the API
@@ -230,7 +230,7 @@ class ApiManager:
         """
         return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
 
-    def get_url(self, choice: str) -> Dict[str, Dict]:
+    def get_url(self, choice: str) -> Dict[str, str]:
         """Get URL for API
 
         :param choice: user choice input
@@ -238,10 +238,13 @@ class ApiManager:
         """
 
         access_token = self.get_access_token()
-        header = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8', 'Authorization': access_token}
+        if 'Bearer' not in access_token:
+            print(f'Error: Invalid access_token of the application, could not connect')
+            exit()
+        header = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': access_token}
         url_obj = {}
         if choice == '0':
-            return 'Exiting...'
+            return 'Exit'
         elif choice == '1':
             url_obj = {'url': self.config['api_urls']['beaver_bus'],
                     'parameters': {},
@@ -253,7 +256,6 @@ class ApiManager:
         elif choice == '3':
             user_date = input('Enter Date (yyyy-mm-dd): ')
             url_obj = {'url_terms': self.config['api_urls']['terms'],
-                    'url_textbooks': self.config['api_urls']['textbooks'],
                     'parameters': {'date': user_date},
                     'header': header}
         elif choice == '4':
@@ -268,7 +270,7 @@ class ApiManager:
 
         return url_obj
 
-    def get_text_books_with_term_date(self, url_obj: Dict[str, Dict]) -> None:
+    def get_text_books_with_term_date(self, url_obj: Dict[str, str]) -> None:
         """Get text books based on specified term and date
         """
 
@@ -294,7 +296,7 @@ class ApiManager:
             else:
                 print("Error: 'data' key is missing or empty")
 
-    def get_stops_vehicles_on_route(self, url_obj: Dict[str, Dict]) -> None:
+    def get_stops_vehicles_on_route(self, url_obj: Dict[str, str]) -> None:
         """Get stops and vehicles on a given route
         and determine where it is heading in real time
         and the ETA for the stop

@@ -76,7 +76,7 @@ The API Manager provides two logging methods: `log_error` and `log_message`. The
 * To log a message, use the `log_message` method:
 
 ```python
-api_manager.log_message("This is a general log message")
+api_manager.log_message('This is a general log message')
 ```
 Log messages will be appended to the `logfile.log` file in the project directory.
 
