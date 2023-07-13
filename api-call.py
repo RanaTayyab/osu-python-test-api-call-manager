@@ -296,6 +296,30 @@ class ApiManager:
             else:
                 print("Error: 'data' key is missing or empty, Check your query again for these parameters")
 
+
+    def validate_data_response(self, data_response: Dict[str, Union[Dict, None]]) -> Union[Dict, bool]:
+        """Validates the data_response dictionary for required keys and values.
+
+        :param data_response: The dictionary to validate
+        :return: True if the validation passes, False otherwise
+        """
+        if data_response:
+            if 'data' in data_response:
+                data = data_response['data']
+
+                if 'attributes' in data:
+                    attributes = data['attributes']
+                    return attributes
+                else:
+                    print("Error: 'attributes' key is missing in data")
+            else:
+                print("Error: 'data' key is missing in data_response, Check your query again for these parameters")
+        else:
+            print("Error: Empty data_response")
+
+        return False
+
+
     def get_stops_vehicles_on_route(self, url_obj: Dict[str, str]) -> None:
         """Get stops and vehicles on a given route
         and determine where it is heading in real time
@@ -307,6 +331,9 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
+
+        attributes = self.validate_data_response(routes_data_response)
+
         if routes_data_response:
             if 'data' in routes_data_response:
                 route_data = routes_data_response['data']
@@ -321,7 +348,7 @@ class ApiManager:
                 else:
                     print("Error: 'attributes' key is missing in route data")
             else:
-                print("Error: 'data' key is missing in routes data, , Check your query again for these parameters")
+                print("Error: 'data' key is missing in routes data, Check your query again for these parameters")
 
             stops = route_attributes.get('stops', [])
 
