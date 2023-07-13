@@ -287,14 +287,14 @@ class ApiManager:
                     attributes = first_term['attributes']
                     calendar_year = attributes.get('calendarYear')
                     season = attributes.get('season')
-                    if calendar_year is None:
+                    if not calendar_year:
                         print("Error: 'calendarYear' attribute is missing or empty")
                     if season is None:
                         print("Error: 'season' attribute is missing or empty")
                 else:
                     print("Error: 'attributes' key is missing in the first term object")
             else:
-                print("Error: 'data' key is missing or empty")
+                print("Error: 'data' key is missing or empty, Check your query again for these parameters")
 
     def get_stops_vehicles_on_route(self, url_obj: Dict[str, str]) -> None:
         """Get stops and vehicles on a given route
@@ -321,7 +321,7 @@ class ApiManager:
                 else:
                     print("Error: 'attributes' key is missing in route data")
             else:
-                print("Error: 'data' key is missing in routes data")
+                print("Error: 'data' key is missing in routes data, , Check your query again for these parameters")
 
             stops = route_attributes.get('stops', [])
 
@@ -381,9 +381,9 @@ class ApiManager:
                                 else:
                                     print("Error: 'attributes' key is missing or empty in the first arrivals data")
                             else:
-                                print("Error: 'data' key is missing in arrivals data response")
+                                print("Error: 'data' key is missing in arrivals data response, Check your query again for these parameters")
                         else:
-                            print("Error: 'stopID' or 'description' key is missing in stop object")
+                            print("Error: 'stopID' or 'description' key is missing in stop object, Check your query again for these parameters")
 
                         print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}, Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
