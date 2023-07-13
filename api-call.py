@@ -297,19 +297,20 @@ class ApiManager:
                 print("Error: 'data' key is missing or empty, Check your query again for these parameters")
 
 
-    def validate_data_response(self, data_response: Dict[str, Union[Dict, None]]) -> Union[Dict, bool]:
+    def validate_data_response(self, data_response: Dict[str, Dict]) -> Union[Dict, bool]:
         """Validates the data_response dictionary for required keys and values.
 
         :param data_response: The dictionary to validate
-        :return: True if the validation passes, False otherwise
+        :return: attributes if the validation passes, False otherwise
         """
         if data_response:
             if 'data' in data_response:
                 data = data_response['data']
 
                 if 'attributes' in data:
-                    attributes = data['attributes']
-                    return attributes
+                    return data['attributes']
+                elif 'attributes' in data[0]:
+                    return data[0]['attributes']
                 else:
                     print("Error: 'attributes' key is missing in data")
             else:
@@ -331,88 +332,51 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
+        route_attributes = self.validate_data_response(routes_data_response)
+        if 'description' in route_attributes:
+            route_name = route_attributes['description']
+        else:
+            print("Error: 'description' key is missing in route attributes")
 
-        attributes = self.validate_data_response(routes_data_response)
+        stops = route_attributes.get('stops', [])
+        for stop in stops:
+            if 'stopID' in stop and 'description' in stop:
+                stop_id = stop['stopID']
+                description = stop['description']
 
-        if routes_data_response:
-            if 'data' in routes_data_response:
-                route_data = routes_data_response['data']
+                url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+                arrivals_data_response = self.get_api_data(
+                    url_obj['url_arrivals'],
+                    url_obj['parameters'],
+                    url_obj['header']
+                )
+                arrivals_attributes = self.validate_data_response(arrivals_data_response)
+                if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
+                    first_arrival = arrivals_attributes['arrivals'][0]
 
-                if 'attributes' in route_data:
-                    route_attributes = route_data['attributes']
+                    if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                        get_vehicle_id = first_arrival['vehicleID']
+                        get_eta_at_stop = first_arrival['eta']
 
-                    if 'description' in route_attributes:
-                        route_name = route_attributes['description']
-                    else:
-                        print("Error: 'description' key is missing in route attributes")
-                else:
-                    print("Error: 'attributes' key is missing in route data")
-            else:
-                print("Error: 'data' key is missing in routes data, Check your query again for these parameters")
-
-            stops = route_attributes.get('stops', [])
-
-            for stop in stops:
-                if 'stopID' in stop and 'description' in stop:
-                    stop_id = stop['stopID']
-                    description = stop['description']
-
-                    url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
-                    arrivals_data_response = self.get_api_data(
-                        url_obj['url_arrivals'],
-                        url_obj['parameters'],
-                        url_obj['header']
-                    )
-                    if arrivals_data_response:
-
-                        if 'data' in arrivals_data_response:
-                            arrivals_data = arrivals_data_response['data']
-
-                            if arrivals_data and 'attributes' in arrivals_data[0]:
-                                arrivals_attributes = arrivals_data[0]['attributes']
-
-                                if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
-                                    first_arrival = arrivals_attributes['arrivals'][0]
-
-                                    if 'vehicleID' in first_arrival and 'eta' in first_arrival:
-                                        get_vehicle_id = first_arrival['vehicleID']
-                                        get_eta_at_stop = first_arrival['eta']
-
-                                        vehicles_data_response = self.get_api_data(
-                                            f"{url_obj['url_vehicles']}/{get_vehicle_id}",
-                                            {},
-                                            url_obj['header']
-                                        )
-                                        if vehicles_data_response:
-
-                                            if 'data' in vehicles_data_response:
-                                                vehicles_data = vehicles_data_response['data']
-
-                                                if 'attributes' in vehicles_data:
-                                                    vehicles_attributes = vehicles_data['attributes']
-
-                                                    if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
-                                                        get_vehicle_name = vehicles_attributes['name']
-                                                        get_vehicle_heading = vehicles_attributes['heading']
-
-                                                    else:
-                                                        print("Error: 'name' or 'heading' key is missing in vehicles attributes")
-                                                else:
-                                                    print("Error: 'attributes' key is missing in vehicles data")
-                                            else:
-                                                print("Error: 'data' key is missing in vehicles data response")
-                                        else:
-                                            print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
-                                    else:
-                                        print("Error: 'arrivals' key is missing or empty in arrivals attributes")
-                                else:
-                                    print("Error: 'attributes' key is missing or empty in the first arrivals data")
-                            else:
-                                print("Error: 'data' key is missing in arrivals data response, Check your query again for these parameters")
+                        vehicles_data_response = self.get_api_data(
+                            f"{url_obj['url_vehicles']}/{get_vehicle_id}",
+                            {},
+                            url_obj['header']
+                        )
+                        vehicles_attributes = self.validate_data_response(vehicles_data_response)
+                        if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
+                            get_vehicle_name = vehicles_attributes['name']
+                            get_vehicle_heading = vehicles_attributes['heading']
                         else:
-                            print("Error: 'stopID' or 'description' key is missing in stop object, Check your query again for these parameters")
+                            print("Error: 'name' or 'heading' key is missing in vehicles attributes")
+                    else:
+                        print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
+                else:
+                    print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+            else:
+                print("Error: 'stopID' or 'description' key is missing in stop object, Check your query again for these parameters")
 
-                        print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}, Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
+            print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}, Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
 
     def main(self) -> None:
         """Driver function of class
