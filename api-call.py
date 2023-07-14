@@ -1,7 +1,7 @@
 import datetime
 import json
 import logging
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 import pytz
 import requests
@@ -11,7 +11,7 @@ import yaml
 class ApiManager:
     def __init__(self):
         print("Started the process and validating 'configuration.yaml' file.")
-        validation = self.validate_config('configuration.yaml')
+        validation = self.is_validate_configuration('configuration.yaml')
         if validation:
             self.config = self.load_from_config()
         else:
@@ -26,8 +26,8 @@ class ApiManager:
 
         with open('configuration.yaml', 'r') as file:
             return yaml.safe_load(file)
-        
-    def validate_config(self, config_path: str) -> bool:
+
+    def is_validate_configuration(self, config_path: str) -> bool:
         """Validate the config.yaml file and verify the URLs.
 
         :param config_path: The path to the config.yaml file.
@@ -44,27 +44,44 @@ class ApiManager:
             return False
 
         # Verify access_token URL
-        access_token_url = config.get('access_token', {}).get('url')
-        access_token_payload = config.get('access_token', {}).get('payload', {})
+        access_token_url = config.get(
+            'access_token',
+            {}
+        ).get(
+            'url'
+        )
+        access_token_payload = config.get(
+            'access_token',
+            {}
+        ).get(
+            'payload',
+            {}
+        )
         access_token_payload['grant_type'] = 'client_credentials'
-        access_token_header = {'Content-Type': 'application/x-www-form-urlencoded'}
-        token = self.verify_url_token(access_token_url, access_token_header, access_token_payload)
+        access_token_header = {'Content-Type':
+                               'application/x-www-form-urlencoded'}
+        token = self.verify_url_token(
+            access_token_url,
+            access_token_header,
+            access_token_payload
+        )
         if 'Bearer' not in token:
             print(f'Error: Invalid access_token URL: {access_token_url}')
             return False
 
         # Verify API URLs
         api_urls = config.get('api_urls', {})
-        header = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': token}
+        header = {'Content-Type': 'application/x-www-form-urlencoded',
+                  'Authorization': token}
         for name, url in api_urls.items():
-            if not self.verify_urls(url, header):
+            if not self.is_url_verified(url, header):
                 print(f"Error: Invalid API URL '{name}': {url}")
                 return False
 
         # All checks passed, config is valid
         return True
 
-    def verify_urls(self, url: str, header: Dict[str, str]) -> bool:
+    def is_url_verified(self, url: str, header: Dict[str, str]) -> bool:
         """Verify the correctness and functionality of a URL.
 
         :param url: The URL to verify.
@@ -72,12 +89,17 @@ class ApiManager:
         :return: True if the URL is valid and functional, False otherwise.
         """
         try:
-            response = requests.head(url, headers=header)
+            response = requests.head(url, headers=header, timeout=10)
             return response.status_code == requests.codes.ok
         except requests.exceptions.RequestException:
             return False
 
-    def verify_url_token(self, url: str, header: Dict[str, str], data: Dict[str, str] = None) -> str:
+    def verify_url_token(
+            self,
+            url: str,
+            header: Dict[str, str],
+            data: Dict[str, str] = None
+            ) -> str:
         """Verify the correctness and functionality of a URL.
 
         :param url: The URL to verify.
@@ -86,7 +108,12 @@ class ApiManager:
         :return: Token otherwise empty string.
         """
         try:
-            response = requests.post(url, headers=header, data=data)
+            response = requests.post(
+                url,
+                headers=header,
+                data=data,
+                timeout=10
+            )
             access_token = response.json()['access_token']
             return f'Bearer {access_token}'
         except requests.exceptions.RequestException:
@@ -127,7 +154,7 @@ class ApiManager:
             datefmt='%Y-%m-%d %H:%M:%S %Z'
         )
 
-        logging.info(f'{current_time}: {message}')
+        logging.info('%s: %s', current_time, message)
 
     def get_access_token(self) -> str:
         """Get access token from OAuth2 for connecting with OSU public APIs
@@ -149,11 +176,22 @@ class ApiManager:
             access_token = response.json()['access_token']
             return f'Bearer {access_token}'
         else:
-            self.log_message(f'Request failed with status code: {response.status_code}')
-            print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
+            self.log_message(
+                'Request failed with status code: '
+                f'{response.status_code}'
+            )
+            print(
+                f'{response.status_code}: '
+                f'{self.get_http_status_description(response.status_code)}'
+            )
             return ''
 
-    def get_api_data(self, url: str, parameters: Dict[str, str], header: Dict[str, str]) -> Dict:
+    def get_api_data(
+            self,
+            url: str,
+            parameters: Dict[str, str],
+            header: Dict[str, str]
+            ) -> Dict:
         """Get Request for getting the data from API
 
         :param url: URL of the API
@@ -171,8 +209,14 @@ class ApiManager:
         if response.status_code == 200:
             return self.format_result(response)
         else:
-            print(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
-            self.log_message(f'{response.status_code}: {self.get_http_status_description(response.status_code)}')
+            print(
+                f'{response.status_code}: '
+                f'{self.get_http_status_description(response.status_code)}'
+            )
+            self.log_message(
+                f'{response.status_code}: '
+                f'{self.get_http_status_description(response.status_code)}'
+            )
 
     def format_result(self, response: requests.Response) -> Dict:
         """Returns data from response object after JSON validation
@@ -183,29 +227,41 @@ class ApiManager:
         try:
             data = response.json()
         except json.decoder.JSONDecodeError:
-            print("Invalid JSON response")
+            print('Invalid JSON response')
 
-        text = json.dumps(data, indent=4)
+        json.dumps(data, indent=4)
         return data
-    
-    def get_http_status_description(self, status_code: int) -> Union[str, None]:
+
+    def get_http_status_description(self, status_code: int) -> Optional[str]:
         """Get the description of an HTTP status code.
 
         :param status_code: The HTTP status code to get the description for.
-        :return: The description of the HTTP status code, or None if the status code is not recognized.
+        :return: The description of the HTTP status code,
+        or None if the status code is not recognized.
         """
 
         status_descriptions: Dict[int, str] = {
             200: 'OK - The request has succeeded.',
-            400: 'Bad Request - The server could not understand the request due to invalid syntax or missing parameters.',
-            401: 'Unauthorized - The request requires user authentication or authentication failed.',
-            403: 'Forbidden - The server understood the request but refuses to authorize it.',
-            404: 'Not Found - The requested resource could not be found.',
-            500: 'Internal Server Error - The server encountered an unexpected condition that prevented it from fulfilling the request.',
-            502: 'Bad Gateway - The server received an invalid response from an upstream server.',
-            503: 'Service Unavailable - The server is currently unable to handle the request due to a temporary overload or maintenance.',
-            504: 'Gateway Timeout - The server did not receive a timely response from an upstream server.',
-            505: 'HTTP Version Not Supported - The server does not support the HTTP protocol version used in the request.'
+            400: 'Bad Request - The server could not understand '
+            'the request due to invalid syntax or missing parameters.',
+            401: 'Unauthorized - The request requires user '
+            'authentication or authentication failed.',
+            403: 'Forbidden - The server understood the '
+            'request but refuses to authorize it.',
+            404: 'Not Found - The requested resource '
+            'could not be found.',
+            500: 'Internal Server Error - The server '
+            'encountered an unexpected '
+            'condition that prevented it from fulfilling the request.',
+            502: 'Bad Gateway - The server received an invalid '
+            'response from an upstream server.',
+            503: 'Service Unavailable - The server is currently unable '
+            'to handle the request due to a temporary '
+            'overload or maintenance.',
+            504: 'Gateway Timeout - The server did not receive a timely '
+            'response from an upstream server.',
+            505: 'HTTP Version Not Supported - The server does not '
+            'support the HTTP protocol version used in the request.'
         }
 
         return status_descriptions.get(status_code)
@@ -213,12 +269,15 @@ class ApiManager:
     def show_tasks(self) -> None:
         """Show tasks to choose as a Menu
         """
-        api_options = ['Quit',
-                    'Beavers Bus',
-                    'Terms',
-                    'Search Text Books of a Term by a custom/any Date',
-                    'Get Details of a Vehicle and its Stops given a specified Route, with ETA and current destination']
-        
+        api_options = [
+            'Quit',
+            'Beavers Bus',
+            'Terms',
+            'Search Text Books of a Term by a custom/any Date',
+            'Get Details of a Vehicle and its Stops '
+            'given a specified Route, with ETA and current destination'
+        ]
+
         print('Which API data do you want to check?')
         for i, option in enumerate(api_options):
             print(f'{i}. {option}')
@@ -239,32 +298,46 @@ class ApiManager:
 
         access_token = self.get_access_token()
         if 'Bearer' not in access_token:
-            print(f'Error: Invalid access_token of the application, could not connect')
+            print(
+                'Error: Invalid access_token '
+                'of the application, could not connect'
+            )
             exit()
-        header = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': access_token}
+        header = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': access_token
+        }
         url_obj = {}
         if choice == '0':
             return 'Exit'
         elif choice == '1':
-            url_obj = {'url': self.config['api_urls']['beaver_bus'],
-                    'parameters': {},
-                    'header': header}
+            url_obj = {
+                'url': self.config['api_urls']['beaver_bus'],
+                'parameters': {},
+                'header': header
+            }
         elif choice == '2':
-            url_obj = {'url': self.config['api_urls']['terms'],
-                    'parameters': {},
-                    'header': header}
+            url_obj = {
+                'url': self.config['api_urls']['terms'],
+                'parameters': {},
+                'header': header
+            }
         elif choice == '3':
             user_date = input('Enter Date (yyyy-mm-dd): ')
-            url_obj = {'url_terms': self.config['api_urls']['terms'],
-                    'parameters': {'date': user_date},
-                    'header': header}
+            url_obj = {
+                'url_terms': self.config['api_urls']['terms'],
+                'parameters': {'date': user_date},
+                'header': header
+            }
         elif choice == '4':
             route_id = input('Enter Route Number: ')
-            url_obj = {'url_routes': self.config['api_urls']['routes'],
-                    'url_arrivals': self.config['api_urls']['arrivals'],
-                    'url_vehicles': self.config['api_urls']['vehicles'],
-                    'route_id': route_id,  'parameters': {},
-                    'header': header}
+            url_obj = {
+                'url_routes': self.config['api_urls']['routes'],
+                'url_arrivals': self.config['api_urls']['arrivals'],
+                'url_vehicles': self.config['api_urls']['vehicles'],
+                'route_id': route_id,  'parameters': {},
+                'header': header
+            }
         else:
             print('Invalid choice. Please try again.')
 
@@ -288,16 +361,21 @@ class ApiManager:
                     calendar_year = attributes.get('calendarYear')
                     season = attributes.get('season')
                     if not calendar_year:
-                        print("Error: 'calendarYear' attribute is missing or empty")
+                        print("Error: 'calendarYear' attribute "
+                              'is missing or empty')
                     if season is None:
                         print("Error: 'season' attribute is missing or empty")
                 else:
-                    print("Error: 'attributes' key is missing in the first term object")
+                    print("Error: 'attributes' key is missing "
+                          'in the first term object')
             else:
-                print("Error: 'data' key is missing or empty, Check your query again for these parameters")
+                print("Error: 'data' key is missing or empty, "
+                      'Check your query again for these parameters')
 
-
-    def validate_data_response(self, data_response: Dict[str, Dict]) -> Union[Dict, bool]:
+    def validate_data_response(
+            self,
+            data_response: Dict[str, Dict]
+            ) -> Union[Dict, bool]:
         """Validates the data_response dictionary for required keys and values.
 
         :param data_response: The dictionary to validate
@@ -314,12 +392,12 @@ class ApiManager:
                 else:
                     print("Error: 'attributes' key is missing in data")
             else:
-                print("Error: 'data' key is missing in data_response, Check your query again for these parameters")
+                print("Error: 'data' key is missing in data_response, "
+                      'Check your query again for these parameters')
         else:
-            print("Error: Empty data_response")
+            print('Error: Empty data_response')
 
         return False
-
 
     def get_stops_vehicles_on_route(self, url_obj: Dict[str, str]) -> None:
         """Get stops and vehicles on a given route
@@ -344,14 +422,22 @@ class ApiManager:
                 stop_id = stop['stopID']
                 description = stop['description']
 
-                url_obj['parameters'] = {'stopID': stop_id, 'routeID': url_obj['route_id']}
+                url_obj['parameters'] = {
+                    'stopID': stop_id,
+                    'routeID': url_obj['route_id']
+                }
                 arrivals_data_response = self.get_api_data(
                     url_obj['url_arrivals'],
                     url_obj['parameters'],
                     url_obj['header']
                 )
-                arrivals_attributes = self.validate_data_response(arrivals_data_response)
-                if 'arrivals' in arrivals_attributes and arrivals_attributes['arrivals']:
+                arrivals_attributes = self.validate_data_response(
+                    arrivals_data_response
+                )
+                if (
+                    'arrivals' in arrivals_attributes
+                    and arrivals_attributes['arrivals']
+                ):
                     first_arrival = arrivals_attributes['arrivals'][0]
 
                     if 'vehicleID' in first_arrival and 'eta' in first_arrival:
@@ -363,20 +449,49 @@ class ApiManager:
                             {},
                             url_obj['header']
                         )
-                        vehicles_attributes = self.validate_data_response(vehicles_data_response)
-                        if 'name' in vehicles_attributes and 'heading' in vehicles_attributes:
-                            get_vehicle_name = vehicles_attributes['name']
-                            get_vehicle_heading = vehicles_attributes['heading']
+                        vehicle_attributes = self.validate_data_response(
+                            vehicles_data_response
+                        )
+                        if (
+                            'name' in vehicle_attributes
+                            and 'heading' in vehicle_attributes
+                        ):
+                            get_vehicle_name = vehicle_attributes['name']
+                            get_vehicle_heading = vehicle_attributes['heading']
                         else:
-                            print("Error: 'name' or 'heading' key is missing in vehicles attributes")
+                            print("Error: 'name' or 'heading' key "
+                                  'is missing in vehicles attributes')
                     else:
-                        print("Error: 'vehicleID' or 'eta' key is missing in the first arrival object")
+                        print("Error: 'vehicleID' or 'eta' key "
+                              'is missing in the first arrival object')
                 else:
-                    print("Error: 'arrivals' key is missing or empty in arrivals attributes")
+                    print("Error: 'arrivals' key is missing "
+                          'or empty in arrivals attributes')
             else:
-                print("Error: 'stopID' or 'description' key is missing in stop object, Check your query again for these parameters")
+                print("Error: 'stopID' or 'description' key is missing in "
+                      'stop object, Check your query again '
+                      'for these parameters')
 
-            print(f"Route ID: {url_obj['route_id']}, Route Name: {route_name}, Stop ID: {stop_id}, Stop Name: {description}, Vehicle Name: {get_vehicle_name}, Vehicle Number: {get_vehicle_id}, Heading: {get_vehicle_heading}, ETA for arrival to Stop: {get_eta_at_stop}")
+            print(
+                'Route ID: {route_id}, '
+                'Route Name: {route_name}, '
+                'Stop ID: {stop_id}, '
+                'Stop Name: {description}, '
+                'Vehicle Name: {vehicle_name}, '
+                'Vehicle Number: {vehicle_id}, '
+                'Heading: {vehicle_heading}, '
+                'ETA for arrival to Stop: {eta}'
+                .format(
+                        route_id=url_obj['route_id'],
+                        route_name=route_name,
+                        stop_id=stop_id,
+                        description=description,
+                        vehicle_name=get_vehicle_name,
+                        vehicle_id=get_vehicle_id,
+                        vehicle_heading=get_vehicle_heading,
+                        eta=get_eta_at_stop
+                )
+            )
 
     def main(self) -> None:
         """Driver function of class
