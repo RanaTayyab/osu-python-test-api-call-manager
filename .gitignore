@@ -3,3 +3,5 @@ py-env/
 logfile.log
 logfile.txt
 .DS_Store
+settings.json
+
