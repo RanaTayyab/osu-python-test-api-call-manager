@@ -311,7 +311,6 @@ class ApiManager:
         url_obj = {}
         if choice == '0':
             url_obj = {'Exit': 'Exit'}
-            return url_obj
         elif choice == '1':
             url_obj = {
                 'url': self.config['api_urls']['beaver_bus'],
@@ -425,8 +424,10 @@ class ApiManager:
             if 'description' in route_attributes:
                 route_name = route_attributes['description']
             else:
-                print("Error: 'description' key is missing in route attributes")
-
+                print(
+                    "Error: 'description' key is missing "
+                    'in route attributes'
+                )
             stops = route_attributes.get('stops', [])
             for stop in stops:
                 if 'stopID' in stop and 'description' in stop:
@@ -450,8 +451,10 @@ class ApiManager:
                         and arrivals_attributes['arrivals']
                     ):
                         first_arrival = arrivals_attributes['arrivals'][0]
-
-                        if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                        if (
+                            'vehicleID' in first_arrival
+                            and 'eta' in first_arrival
+                        ):
                             get_vehicle_id = first_arrival['vehicleID']
                             get_eta_at_stop = first_arrival['eta']
 
@@ -468,7 +471,9 @@ class ApiManager:
                                 and 'heading' in vehicle_attributes
                             ):
                                 get_vehicle_name = vehicle_attributes['name']
-                                get_vehicle_heading = vehicle_attributes['heading']
+                                get_vehicle_heading = (
+                                    vehicle_attributes['heading']
+                                )
                             else:
                                 print(
                                     "Error: 'name' or 'heading' key "
