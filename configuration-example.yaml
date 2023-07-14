@@ -1,0 +1,11 @@
+access_token:
+  url: https://api.example.com/oauth2/token
+  payload:
+    client_id: client_id
+    client_secret: client_secret
+api_urls:
+  beaver_bus: https://api.example.com/v1/beaverbus
+  terms: https://api.example.com/v1/terms
+  routes: https://api.example.com/v1/routes
+  arrivals: https://api.example.com/v1/arrivals
+  vehicles: https://api.example.com/v1/vehicles
