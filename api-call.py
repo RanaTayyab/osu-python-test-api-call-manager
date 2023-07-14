@@ -361,16 +361,22 @@ class ApiManager:
                     calendar_year = attributes.get('calendarYear')
                     season = attributes.get('season')
                     if not calendar_year:
-                        print("Error: 'calendarYear' attribute "
-                              'is missing or empty')
+                        print(
+                            "Error: 'calendarYear' attribute "
+                            'is missing or empty'
+                        )
                     if season is None:
                         print("Error: 'season' attribute is missing or empty")
                 else:
-                    print("Error: 'attributes' key is missing "
-                          'in the first term object')
+                    print(
+                        "Error: 'attributes' key is missing "
+                        'in the first term object'
+                    )
             else:
-                print("Error: 'data' key is missing or empty, "
-                      'Check your query again for these parameters')
+                print(
+                    "Error: 'data' key is missing or empty, "
+                    'Check your query again for these parameters'
+                )
 
     def validate_data_response(
             self,
@@ -392,8 +398,10 @@ class ApiManager:
                 else:
                     print("Error: 'attributes' key is missing in data")
             else:
-                print("Error: 'data' key is missing in data_response, "
-                      'Check your query again for these parameters')
+                print(
+                    "Error: 'data' key is missing in data_response, "
+                    'Check your query again for these parameters'
+                )
         else:
             print('Error: Empty data_response')
 
@@ -459,18 +467,26 @@ class ApiManager:
                             get_vehicle_name = vehicle_attributes['name']
                             get_vehicle_heading = vehicle_attributes['heading']
                         else:
-                            print("Error: 'name' or 'heading' key "
-                                  'is missing in vehicles attributes')
+                            print(
+                                "Error: 'name' or 'heading' key "
+                                'is missing in vehicles attributes'
+                            )
                     else:
-                        print("Error: 'vehicleID' or 'eta' key "
-                              'is missing in the first arrival object')
+                        print(
+                            "Error: 'vehicleID' or 'eta' key "
+                            'is missing in the first arrival object'
+                        )
                 else:
-                    print("Error: 'arrivals' key is missing "
-                          'or empty in arrivals attributes')
+                    print(
+                        "Error: 'arrivals' key is missing "
+                        'or empty in arrivals attributes'
+                    )
             else:
-                print("Error: 'stopID' or 'description' key is missing in "
-                      'stop object, Check your query again '
-                      'for these parameters')
+                print(
+                    "Error: 'stopID' or 'description' key is missing in "
+                    'stop object, Check your query again '
+                    'for these parameters'
+                )
 
             print(
                 'Route ID: {route_id}, '
