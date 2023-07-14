@@ -1,3 +1,15 @@
+"""
+API Manager
+
+This module provides a class `ApiManager` for OSU Public APIs that
+handles API requests and dataprocessing. It allows users to
+interactively choose various API tasks and retrieve information from the
+corresponding APIs for different use cases.
+
+Author: [Tayyab Bin Tahir]
+
+"""
+
 import datetime
 import json
 import logging
@@ -9,7 +21,24 @@ import yaml
 
 
 class ApiManager:
+    """
+    The ApiManager class handles API requests and data processing.
+    It provides methods to interactively choose various API tasks and
+    retrieve data from the corresponding APIs.
+
+    Args:
+        None
+
+    Attributes:
+        config (Dict): The configuration object loaded from the
+        'configuration.yaml' file.
+    """
+
     def __init__(self):
+        """
+        Initialize the ApiManager object and validate the
+        'configuration.yaml' file.
+        """
         print("Started the process and validating 'configuration.yaml' file.")
         validation = self.is_validate_configuration('configuration.yaml')
         if validation:
@@ -24,7 +53,7 @@ class ApiManager:
         :returns: The config object
         """
 
-        with open('configuration.yaml', 'r') as file:
+        with open('configuration.yaml', 'r', encoding='utf-8') as file:
             return yaml.safe_load(file)
 
     def is_validate_configuration(self, config_path: str) -> bool:
@@ -34,7 +63,7 @@ class ApiManager:
         :return: True if the config and URLs are valid, False otherwise.
         """
         try:
-            with open(config_path, 'r') as file:
+            with open(config_path, 'r', encoding='utf-8') as file:
                 config = yaml.safe_load(file)
         except FileNotFoundError:
             print(f"Error: Config file '{config_path}' not found.")
@@ -133,7 +162,7 @@ class ApiManager:
         formatted_message = f'[{current_time}] {error_message}'
 
         # Append the error message to the logfile
-        with open('logfile.txt', 'a') as file:
+        with open('logfile.txt', 'a', encoding='utf-8') as file:
             file.write(f'{formatted_message}\n')
 
     def log_message(self, message: str) -> None:
@@ -226,12 +255,10 @@ class ApiManager:
         :return: The validated data
         """
         try:
-            data = response.json()
+            return response.json()
         except json.decoder.JSONDecodeError:
             print('Invalid JSON response')
-
-        json.dumps(data, indent=4)
-        return data
+            return {}
 
     def get_http_status_description(self, status_code: int) -> Optional[str]:
         """Get the description of an HTTP status code.
@@ -290,7 +317,7 @@ class ApiManager:
         """
         return input('Enter your choice (0 or 1 or 2 or 3 or 4): ')
 
-    def get_url(self, choice: str) -> Dict[str, str]:
+    def get_url(self, choice: str) -> Dict:
         """Get URL for API
 
         :param choice: user choice input
@@ -344,7 +371,7 @@ class ApiManager:
 
         return url_obj
 
-    def get_text_books_with_term_date(self, url_obj: Dict[str, str]) -> None:
+    def get_text_books_with_term_date(self, url_obj: Dict) -> None:
         """Get text books based on specified term and date
         """
 
@@ -408,7 +435,7 @@ class ApiManager:
 
         return False
 
-    def get_stops_vehicles_on_route(self, url_obj: Dict[str, str]) -> None:
+    def get_stops_vehicles_on_route(self, url_obj: Dict) -> None:
         """Get stops and vehicles on a given route
         and determine where it is heading in real time
         and the ETA for the stop
@@ -419,16 +446,31 @@ class ApiManager:
             url_obj['parameters'],
             url_obj['header']
         )
+        route_name = ''
+        stop_id = ''
+        description = ''
+        get_vehicle_name = ''
+        get_vehicle_id = ''
+        get_vehicle_heading = ''
+        get_eta_at_stop = ''
         route_attributes = self.validate_data_response(routes_data_response)
         if route_attributes:
-            if 'description' in route_attributes:
+            if (
+                isinstance(route_attributes, dict)
+                and 'description' in route_attributes
+            ):
                 route_name = route_attributes['description']
             else:
                 print(
                     "Error: 'description' key is missing "
                     'in route attributes'
                 )
-            stops = route_attributes.get('stops', [])
+
+            stops = []
+            if isinstance(route_attributes, dict):
+                stops = route_attributes.get('stops', [])
+            else:
+                print("Error: 'route_attributes' is not a dictionary")
             for stop in stops:
                 if 'stopID' in stop and 'description' in stop:
                     stop_id = stop['stopID']
@@ -447,7 +489,8 @@ class ApiManager:
                         arrivals_data_response
                     )
                     if (
-                        'arrivals' in arrivals_attributes
+                        isinstance(arrivals_attributes, dict)
+                        and 'arrivals' in arrivals_attributes
                         and arrivals_attributes['arrivals']
                     ):
                         first_arrival = arrivals_attributes['arrivals'][0]
@@ -467,7 +510,8 @@ class ApiManager:
                                 vehicles_data_response
                             )
                             if (
-                                'name' in vehicle_attributes
+                                isinstance(vehicle_attributes, dict)
+                                and 'name' in vehicle_attributes
                                 and 'heading' in vehicle_attributes
                             ):
                                 get_vehicle_name = vehicle_attributes['name']
@@ -497,24 +541,14 @@ class ApiManager:
                     )
 
                 print(
-                    'Route ID: {route_id}, '
-                    'Route Name: {route_name}, '
-                    'Stop ID: {stop_id}, '
-                    'Stop Name: {description}, '
-                    'Vehicle Name: {vehicle_name}, '
-                    'Vehicle Number: {vehicle_id}, '
-                    'Heading: {vehicle_heading}, '
-                    'ETA for arrival to Stop: {eta}'
-                    .format(
-                            route_id=url_obj['route_id'],
-                            route_name=route_name,
-                            stop_id=stop_id,
-                            description=description,
-                            vehicle_name=get_vehicle_name,
-                            vehicle_id=get_vehicle_id,
-                            vehicle_heading=get_vehicle_heading,
-                            eta=get_eta_at_stop
-                    )
+                    f"Route ID: {url_obj['route_id']}, "
+                    f'Route Name: {route_name}, '
+                    f'Stop ID: {stop_id}, '
+                    f'Stop Name: {description}, '
+                    f'Vehicle Name: {get_vehicle_name}, '
+                    f'Vehicle Number: {get_vehicle_id}, '
+                    f'Heading: {get_vehicle_heading}, '
+                    f'ETA for arrival to Stop: {get_eta_at_stop}'
                 )
 
     def main(self) -> None:
