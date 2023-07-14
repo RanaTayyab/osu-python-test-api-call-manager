@@ -98,7 +98,7 @@ class ApiManager:
             self,
             url: str,
             header: Dict[str, str],
-            data: Dict[str, str] = None
+            data: Dict[str, str]
             ) -> str:
         """Verify the correctness and functionality of a URL.
 
@@ -217,6 +217,7 @@ class ApiManager:
                 f'{response.status_code}: '
                 f'{self.get_http_status_description(response.status_code)}'
             )
+            return {}
 
     def format_result(self, response: requests.Response) -> Dict:
         """Returns data from response object after JSON validation
@@ -309,7 +310,8 @@ class ApiManager:
         }
         url_obj = {}
         if choice == '0':
-            return 'Exit'
+            url_obj = {'Exit': 'Exit'}
+            return url_obj
         elif choice == '1':
             url_obj = {
                 'url': self.config['api_urls']['beaver_bus'],
@@ -419,95 +421,96 @@ class ApiManager:
             url_obj['header']
         )
         route_attributes = self.validate_data_response(routes_data_response)
-        if 'description' in route_attributes:
-            route_name = route_attributes['description']
-        else:
-            print("Error: 'description' key is missing in route attributes")
+        if route_attributes:
+            if 'description' in route_attributes:
+                route_name = route_attributes['description']
+            else:
+                print("Error: 'description' key is missing in route attributes")
 
-        stops = route_attributes.get('stops', [])
-        for stop in stops:
-            if 'stopID' in stop and 'description' in stop:
-                stop_id = stop['stopID']
-                description = stop['description']
+            stops = route_attributes.get('stops', [])
+            for stop in stops:
+                if 'stopID' in stop and 'description' in stop:
+                    stop_id = stop['stopID']
+                    description = stop['description']
 
-                url_obj['parameters'] = {
-                    'stopID': stop_id,
-                    'routeID': url_obj['route_id']
-                }
-                arrivals_data_response = self.get_api_data(
-                    url_obj['url_arrivals'],
-                    url_obj['parameters'],
-                    url_obj['header']
-                )
-                arrivals_attributes = self.validate_data_response(
-                    arrivals_data_response
-                )
-                if (
-                    'arrivals' in arrivals_attributes
-                    and arrivals_attributes['arrivals']
-                ):
-                    first_arrival = arrivals_attributes['arrivals'][0]
+                    url_obj['parameters'] = {
+                        'stopID': stop_id,
+                        'routeID': url_obj['route_id']
+                    }
+                    arrivals_data_response = self.get_api_data(
+                        url_obj['url_arrivals'],
+                        url_obj['parameters'],
+                        url_obj['header']
+                    )
+                    arrivals_attributes = self.validate_data_response(
+                        arrivals_data_response
+                    )
+                    if (
+                        'arrivals' in arrivals_attributes
+                        and arrivals_attributes['arrivals']
+                    ):
+                        first_arrival = arrivals_attributes['arrivals'][0]
 
-                    if 'vehicleID' in first_arrival and 'eta' in first_arrival:
-                        get_vehicle_id = first_arrival['vehicleID']
-                        get_eta_at_stop = first_arrival['eta']
+                        if 'vehicleID' in first_arrival and 'eta' in first_arrival:
+                            get_vehicle_id = first_arrival['vehicleID']
+                            get_eta_at_stop = first_arrival['eta']
 
-                        vehicles_data_response = self.get_api_data(
-                            f"{url_obj['url_vehicles']}/{get_vehicle_id}",
-                            {},
-                            url_obj['header']
-                        )
-                        vehicle_attributes = self.validate_data_response(
-                            vehicles_data_response
-                        )
-                        if (
-                            'name' in vehicle_attributes
-                            and 'heading' in vehicle_attributes
-                        ):
-                            get_vehicle_name = vehicle_attributes['name']
-                            get_vehicle_heading = vehicle_attributes['heading']
+                            vehicles_data_response = self.get_api_data(
+                                f"{url_obj['url_vehicles']}/{get_vehicle_id}",
+                                {},
+                                url_obj['header']
+                            )
+                            vehicle_attributes = self.validate_data_response(
+                                vehicles_data_response
+                            )
+                            if (
+                                'name' in vehicle_attributes
+                                and 'heading' in vehicle_attributes
+                            ):
+                                get_vehicle_name = vehicle_attributes['name']
+                                get_vehicle_heading = vehicle_attributes['heading']
+                            else:
+                                print(
+                                    "Error: 'name' or 'heading' key "
+                                    'is missing in vehicles attributes'
+                                )
                         else:
                             print(
-                                "Error: 'name' or 'heading' key "
-                                'is missing in vehicles attributes'
+                                "Error: 'vehicleID' or 'eta' key "
+                                'is missing in the first arrival object'
                             )
                     else:
                         print(
-                            "Error: 'vehicleID' or 'eta' key "
-                            'is missing in the first arrival object'
+                            "Error: 'arrivals' key is missing "
+                            'or empty in arrivals attributes'
                         )
                 else:
                     print(
-                        "Error: 'arrivals' key is missing "
-                        'or empty in arrivals attributes'
+                        "Error: 'stopID' or 'description' key is missing in "
+                        'stop object, Check your query again '
+                        'for these parameters'
                     )
-            else:
-                print(
-                    "Error: 'stopID' or 'description' key is missing in "
-                    'stop object, Check your query again '
-                    'for these parameters'
-                )
 
-            print(
-                'Route ID: {route_id}, '
-                'Route Name: {route_name}, '
-                'Stop ID: {stop_id}, '
-                'Stop Name: {description}, '
-                'Vehicle Name: {vehicle_name}, '
-                'Vehicle Number: {vehicle_id}, '
-                'Heading: {vehicle_heading}, '
-                'ETA for arrival to Stop: {eta}'
-                .format(
-                        route_id=url_obj['route_id'],
-                        route_name=route_name,
-                        stop_id=stop_id,
-                        description=description,
-                        vehicle_name=get_vehicle_name,
-                        vehicle_id=get_vehicle_id,
-                        vehicle_heading=get_vehicle_heading,
-                        eta=get_eta_at_stop
+                print(
+                    'Route ID: {route_id}, '
+                    'Route Name: {route_name}, '
+                    'Stop ID: {stop_id}, '
+                    'Stop Name: {description}, '
+                    'Vehicle Name: {vehicle_name}, '
+                    'Vehicle Number: {vehicle_id}, '
+                    'Heading: {vehicle_heading}, '
+                    'ETA for arrival to Stop: {eta}'
+                    .format(
+                            route_id=url_obj['route_id'],
+                            route_name=route_name,
+                            stop_id=stop_id,
+                            description=description,
+                            vehicle_name=get_vehicle_name,
+                            vehicle_id=get_vehicle_id,
+                            vehicle_heading=get_vehicle_heading,
+                            eta=get_eta_at_stop
+                    )
                 )
-            )
 
     def main(self) -> None:
         """Driver function of class
@@ -517,7 +520,7 @@ class ApiManager:
             user_choice = self.get_user_choice()
             url_obj = self.get_url(user_choice)
             if user_choice == '0':
-                print(url_obj)
+                print(url_obj['Exit'])
                 break
             if (
                 user_choice in ('1', '2')
